@@ -5,25 +5,7 @@
     android:padding="@dimen/start_layout_padding"
     tools:context="ca.simonho.sensorrecord.StartFragment">
 
-    <TextView
-        android:id="@+id/start_label_subNum"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/start_element_height"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginRight="@dimen/start_label_margin_right"
-        android:gravity="center_vertical"
-        android:text="@string/start_label_subNum"
-        android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/start_value_subNum"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/start_element_height"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@id/start_label_subNum"
-        android:gravity="center_vertical" />
 
     <Button
         android:id="@+id/startButton"

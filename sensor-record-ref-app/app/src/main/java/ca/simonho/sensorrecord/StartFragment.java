@@ -19,6 +19,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class StartFragment extends Fragment implements View.OnClickListener {
 
     public static final String TAG = "StartFragment";
@@ -54,8 +58,6 @@ public class StartFragment extends Fragment implements View.OnClickListener {
 
         //Get form text view element and set
         recordProgressMessage = (TextView) view.findViewById(R.id.start_recording_progress);
-        TextView subNum = (TextView) view.findViewById(R.id.start_value_subNum);
-        subNum.setText(dbHelper.getTempSubInfo("subNum"));
 
         //Set onclick listener for save button
         startButton = (Button) view.findViewById(R.id.startButton);
@@ -82,10 +84,25 @@ public class StartFragment extends Fragment implements View.OnClickListener {
         return view;
     }
 
+    public void addSub(){
+
+            //Insert subject into TEMP subject table
+            MainActivity.subCreated = true;
+
+            dbHelper.insertSubjectTemp(
+                    Long.parseLong(new SimpleDateFormat("MMddmm", Locale.US).format(new Date())),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()),
+                    0
+            );
+    }
+
     @Override
     public void onClick(View v) {
         if (!MainActivity.dataRecordStarted){
             try{
+
+                // add new subject for this start time
+                addSub();
                 //Disable the hamburger, and swipes, while recording
                 mainActivity.drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                 mainActivity.hamburger.setDrawerIndicatorEnabled(false);
@@ -101,7 +118,7 @@ public class StartFragment extends Fragment implements View.OnClickListener {
                 startButton.setText(R.string.start_button_label_stop);
 
                 //Insert start time of recording
-                dbHelper.setStartTime(Short.parseShort(dbHelper.getTempSubInfo("subNum")), System.currentTimeMillis());
+                dbHelper.setStartTime(Long.parseLong(dbHelper.getTempSubInfo("subNum")), System.currentTimeMillis());
 
                 //Start the service
                 Intent startService = new Intent(mainActivity, SensorService.class);

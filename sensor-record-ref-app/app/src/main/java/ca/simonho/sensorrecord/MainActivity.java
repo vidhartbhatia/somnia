@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity
         fragmentManager = getSupportFragmentManager();
 
         //First fragment is blank. So set initial fragment to 'new' instead
-        addFragment(new NewFragment(), true);
+        addFragment(new StartFragment(), true);
 
         //Set the toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -100,8 +100,8 @@ public class MainActivity extends AppCompatActivity
         //Disable menu items that should display when a user exists
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        navigationView.getMenu().findItem(R.id.nav_start).setEnabled(false);
-        navigationView.getMenu().findItem(R.id.nav_save).setEnabled(false);
+        navigationView.getMenu().findItem(R.id.nav_start).setEnabled(true);
+        navigationView.getMenu().findItem(R.id.nav_save).setEnabled(true);
 
         //Create dbHelper
         dbHelper = DBHelper.getInstance(this);
@@ -225,14 +225,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         switch (id) {
-            case R.id.nav_new:
-                //If a subject is created, go to Subject Info, otherwise, go to New fragment
-                if (!subCreated) {
-                    addFragment(new NewFragment(), true);
-                } else {
-                    addFragment(new SubjectInfoFragment(), true);
-                }
-                break;
             case R.id.nav_start:
                 addFragment(new StartFragment(), true);
                 break;

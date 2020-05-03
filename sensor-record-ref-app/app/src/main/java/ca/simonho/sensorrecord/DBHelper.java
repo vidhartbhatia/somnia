@@ -33,24 +33,14 @@ public class DBHelper extends SQLiteOpenHelper {
     //Constants for identifying subject table and fields
     public static final String SUBJECTS_TABLE_NAME = "subjects";
     public static final String SUBJECTS_TABLE_NAME_TEMP = "subjects_temp";
-    public static final String SUBJECTS_RESEARCH_ASSISTANT = "RA";
     public static final String SUBJECTS_ID = "id";
-    public static final String SUBJECTS_CONDITION = "condition";
-    public static final String SUBJECTS_AGE = "age";
-    public static final String SUBJECTS_SEX = "sex";
     public static final String SUBJECTS_DATE = "date";
-    public static final String SUBJECTS_HEIGHT = "height";
     public static final String SUBJECTS_START_TIME = "starttime";
 
     //Subject table structure
     private static final String SUBJECTS_TABLE_STRUCTURE =
             " (" + SUBJECTS_ID + " INTEGER PRIMARY KEY, " +
                     SUBJECTS_DATE + " TEXT default CURRENT_TIMESTAMP, " +
-                    SUBJECTS_RESEARCH_ASSISTANT + " TEXT, " +
-                    SUBJECTS_CONDITION + " INTEGER, " +
-                    SUBJECTS_AGE + " INTEGER, " +
-                    SUBJECTS_SEX + " TEXT, " +
-                    SUBJECTS_HEIGHT + " INTEGER, " +
                     SUBJECTS_START_TIME + " INTEGER " +
                     ")";
 
@@ -66,6 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATA_TABLE_NAME = "data";
     public static final String DATA_TABLE_NAME_TEMP = "data_temp";
     public static final String DATA_SUBJECT = "id";
+    public static final String DATA_TIME_STAMP = "time_stamp";
     public static final String DATA_TIME = "time";
     public static final String DATA_ACCX = "accX";
     public static final String DATA_ACCY = "accY";
@@ -92,6 +83,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //Data table structure
     private static final String DATA_TABLE_STRUCTURE =
             " (" + DATA_SUBJECT + " INTEGER, " +
+                    DATA_TIME_STAMP + " INTEGER, " +
                     DATA_TIME + " INTEGER, " +
                     DATA_ACCX + " REAL, " +
                     DATA_ACCY + " REAL, " +
@@ -222,7 +214,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(DATA_TABLE_CREATE_TEMP);
     }
 
-    public boolean checkSubjectExists(Short subNum) throws SQLException {
+    public boolean checkSubjectExists(Long subNum) throws SQLException {
         //Check if subject exists in persistent subject table
         String query = "SELECT * FROM " + SUBJECTS_TABLE_NAME + " WHERE " + SUBJECTS_ID + "=" + subNum;
 
@@ -233,7 +225,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return exists;
     }
 
-    public boolean checkSubjectDataExists(Short subNum) throws SQLException {
+    public boolean checkSubjectDataExists(Long subNum) throws SQLException {
         //Check if sensor data, for this subject, exists in the temp data table
         String query = "SELECT * FROM " + DATA_TABLE_NAME_TEMP + " WHERE " + DATA_SUBJECT + "=" + subNum;
 
@@ -244,24 +236,17 @@ public class DBHelper extends SQLiteOpenHelper {
         return exists;
     }
 
-    public void insertSubjectTemp(Short subNum, String date, String RA,
-                                 Short condition, Short age,
-                                 String sex, Short height, long time) throws SQLException {
+    public void insertSubjectTemp(Long subNum, String date, long time) throws SQLException {
 
         ContentValues subjectData = new ContentValues();
         subjectData.put(SUBJECTS_ID, subNum);
         subjectData.put(SUBJECTS_DATE, date);
-//        subjectData.put(SUBJECTS_RESEARCH_ASSISTANT, RA);
-//        subjectData.put(SUBJECTS_CONDITION, condition);
-//        subjectData.put(SUBJECTS_AGE, age);
-//        subjectData.put(SUBJECTS_SEX, sex);
-//        subjectData.put(SUBJECTS_HEIGHT, height);
         subjectData.put(SUBJECTS_START_TIME, time);
 
         db.insertOrThrow(SUBJECTS_TABLE_NAME_TEMP, null, subjectData);
     }
 
-    public void setStartTime(Short subNum, long time) throws SQLException {
+    public void setStartTime(Long subNum, long time) throws SQLException {
         ContentValues cv = new ContentValues();
         cv.put(SUBJECTS_START_TIME, time);
         db.update(SUBJECTS_TABLE_NAME_TEMP, cv, SUBJECTS_ID + " = " + subNum, null);
@@ -282,21 +267,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 case "date":
                     result = c.getString(c.getColumnIndex(SUBJECTS_DATE));
                     break;
-                case "ra":
-                    result = c.getString(c.getColumnIndex(SUBJECTS_RESEARCH_ASSISTANT));
-                    break;
-                case "condition":
-                    result = c.getString(c.getColumnIndex(SUBJECTS_CONDITION));
-                    break;
-                case "age":
-                    result = c.getString(c.getColumnIndex(SUBJECTS_AGE));
-                    break;
-                case "sex":
-                    result = c.getString(c.getColumnIndex(SUBJECTS_SEX));
-                    break;
-                case "height":
-                    result = c.getString(c.getColumnIndex(SUBJECTS_HEIGHT));
-                    break;
                 case "time":
                     result = c.getString(c.getColumnIndex(SUBJECTS_START_TIME));
                     break;
@@ -313,7 +283,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.delete(DATA_TABLE_NAME_TEMP, null,null);
     }
 
-    public void insertDataTemp(short subNum, long time,
+    public void insertDataTemp(Long subNum, long time_stamp, long time,
                               float[] acc,
                               float[] gyro,
                               float[] grav,
@@ -323,6 +293,7 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues sensorValues = new ContentValues();
 
         sensorValues.put(DATA_SUBJECT, subNum);
+        sensorValues.put(DATA_TIME_STAMP, time_stamp);
         sensorValues.put(DATA_TIME, time);
         sensorValues.put(DATA_ACCX, acc[0]);
         sensorValues.put(DATA_ACCY, acc[1]);
@@ -336,15 +307,6 @@ public class DBHelper extends SQLiteOpenHelper {
         sensorValues.put(DATA_MAGX, mag[0]);
         sensorValues.put(DATA_MAGY, mag[1]);
         sensorValues.put(DATA_MAGZ, mag[2]);
-//        sensorValues.put(DATA_ROT1, rot[0]);
-//        sensorValues.put(DATA_ROT2, rot[1]);
-//        sensorValues.put(DATA_ROT3, rot[2]);
-//        sensorValues.put(DATA_ROT4, rot[3]);
-//        sensorValues.put(DATA_ROT5, rot[4]);
-//        sensorValues.put(DATA_ROT6, rot[5]);
-//        sensorValues.put(DATA_ROT7, rot[6]);
-//        sensorValues.put(DATA_ROT8, rot[7]);
-//        sensorValues.put(DATA_ROT9, rot[8]);
 
         db.insertOrThrow(DATA_TABLE_NAME_TEMP, null, sensorValues);
     }
@@ -367,8 +329,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         while (curCSV.moveToNext()) {
 
-            String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
-                    curCSV.getString(3), curCSV.getString(4), curCSV.getString(5), curCSV.getString(6), curCSV.getString(7)};
+            String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
 
             csvWrite.writeNext(arrStr);
         }
@@ -391,20 +352,12 @@ public class DBHelper extends SQLiteOpenHelper {
         while (curCSV.moveToNext()) {
             writeCounter++;
 
-//            String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
-//                    curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
-//                    curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
-//                    curCSV.getString(9), curCSV.getString(10), curCSV.getString(11),
-//                    curCSV.getString(12), curCSV.getString(13), curCSV.getString(14),
-//                    curCSV.getString(15), curCSV.getString(16), curCSV.getString(17),
-//                    curCSV.getString(18), curCSV.getString(19), curCSV.getString(20),
-//                    curCSV.getString(21), curCSV.getString(22)};
 
             String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
                     curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
                     curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
                     curCSV.getString(9), curCSV.getString(10), curCSV.getString(11),
-                    curCSV.getString(12), curCSV.getString(13)};
+                    curCSV.getString(12), curCSV.getString(13), curCSV.getString(14),};
             csvWrite.writeNext(arrStr);
 
             if ((writeCounter % 1000) == 0){

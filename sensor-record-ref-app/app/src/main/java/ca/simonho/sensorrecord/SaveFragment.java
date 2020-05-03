@@ -79,7 +79,7 @@ public class SaveFragment extends Fragment implements View.OnClickListener {
         } else {
             saveButton.setEnabled(true);
 
-            subjectDataExists = dbHelper.checkSubjectDataExists(Short.parseShort(dbHelper.getTempSubInfo("subNum")));
+            subjectDataExists = MainActivity.subCreated;
 
             //only offer to save if sensor data exists, otherwise, just quit
             if (subjectDataExists) {

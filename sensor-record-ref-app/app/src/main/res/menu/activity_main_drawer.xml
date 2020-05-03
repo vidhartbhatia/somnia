@@ -4,10 +4,7 @@
     <item android:title="Participant">
         <menu>
             <group android:checkableBehavior="single">
-                <item
-                    android:id="@+id/nav_new"
-                    android:icon="@android:drawable/ic_menu_add"
-                    android:title="@string/nav_new" />
+
                 <item
                     android:id="@+id/nav_start"
                     android:icon="@android:drawable/ic_media_play"
