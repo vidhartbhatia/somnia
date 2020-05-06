@@ -22,6 +22,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +31,9 @@ public class SensorService extends Service implements SensorEventListener {
 
     public static final String TAG = "SensorService";
 
+
     public static final int SCREEN_OFF_RECEIVER_DELAY = 100;
+    public static final int WINDOW_SIZE = 5*60 * 10; // 5 minutes
 
     //This can't be set below 10ms due to Android/hardware limitations. Use 9 to get more accurate 10ms intervals
     final short POLL_FREQUENCY = 99; //in milliseconds
@@ -39,6 +42,12 @@ public class SensorService extends Service implements SensorEventListener {
     long curTimeStamp;
     long curTime;
 
+    public ArrayList<Float> x_window;
+    public ArrayList<Float> y_window;
+    public ArrayList<Float> z_window;
+    double x_sum = 0.0;
+    double y_sum = 0.0;
+    double z_sum = 0.0;
 
     private Messenger messageHandler;
 
@@ -53,6 +62,7 @@ public class SensorService extends Service implements SensorEventListener {
     Sensor magnetic;
 
     float[] accelerometerMatrix = new float[3];
+    float[] accelerometerVarianceMatrix = new float[3];
     float[] gyroscopeMatrix = new float[3];
     float[] gravityMatrix = new float[3];
     float[] magneticMatrix = new float[3];
@@ -111,6 +121,27 @@ public class SensorService extends Service implements SensorEventListener {
         //Safe not to implement
     }
 
+//    public static double average(ArrayList<Float> list) {
+//        double size = list.size();
+//        double sum = 0.0;
+//        for (Float l : list){
+//            sum += l;
+//        }
+//        return(sum/size);
+
+//    }
+
+    public static double variance(ArrayList<Float> list, double sum) {
+        // write code here
+        double avg = sum/list.size();
+        double asq = 0.0;
+        for(float i:list){
+            asq = asq + ((i - avg) * (i - avg));
+        }
+        double var = asq/(list.size()) ;
+        return var;
+    }
+
     public void onSensorChanged(SensorEvent event) {
         sensor = event.sensor;
 
@@ -126,7 +157,7 @@ public class SensorService extends Service implements SensorEventListener {
             magneticMatrix = event.values;
         }
 
-        SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix);
+//        SensorManager.getRotationMatrix(rotationMatrix, null, gravityMatrix, magneticMatrix);
 
         curTime = event.timestamp; //in nanoseconds
         curTimeStamp = System.currentTimeMillis();
@@ -136,15 +167,37 @@ public class SensorService extends Service implements SensorEventListener {
 
             lastUpdate = curTime;
 
-            //World coordinate system transformation - do in post processing instead
-            //accelerometerWorldMatrix[0] = rotationMatrix[0] * accelerometerMatrix[0] + rotationMatrix[1] * accelerometerMatrix[1] + rotationMatrix[2] * accelerometerMatrix[2];
-            //accelerometerWorldMatrix[1] = rotationMatrix[3] * accelerometerMatrix[0] + rotationMatrix[4] * accelerometerMatrix[1] + rotationMatrix[5] * accelerometerMatrix[2];
-            //accelerometerWorldMatrix[2] = rotationMatrix[6] * accelerometerMatrix[0] + rotationMatrix[7] * accelerometerMatrix[1] + rotationMatrix[8] * accelerometerMatrix[2];
+            // add to windows
+            if (i == MainActivity.TYPE_ACCELEROMETER) {
+
+                x_window.add(accelerometerMatrix[0]);
+                x_sum += accelerometerMatrix[0];
+                y_window.add(accelerometerMatrix[1]);
+                y_sum += accelerometerMatrix[1];
+                z_window.add(accelerometerMatrix[2]);
+                z_sum += accelerometerMatrix[2];
+
+                if (x_window.size() >= WINDOW_SIZE) {
+                    x_sum -= x_window.get(0);
+                    y_sum -= y_window.get(0);
+                    z_sum -= z_window.get(0);
+
+                    x_window.remove(0);
+                    y_window.remove(0);
+                    z_window.remove(0);
+                }
+
+                accelerometerVarianceMatrix[0] = (float)(variance(x_window, x_sum));
+                accelerometerVarianceMatrix[1] = (float)(variance(y_window, y_sum));
+                accelerometerVarianceMatrix[2] = (float)(variance(z_window, z_sum));
+
+            }
+
 
             //insert into database in background thread
 
             try{
-                Runnable insertHandler = new InsertHandler(curTimeStamp,curTime/1000000, accelerometerMatrix, gyroscopeMatrix,
+                Runnable insertHandler = new InsertHandler(curTimeStamp,curTime/1000000, accelerometerMatrix, accelerometerVarianceMatrix, gyroscopeMatrix,
                         gravityMatrix, magneticMatrix, rotationMatrix);
                 executor.execute(insertHandler);
             } catch (SQLException e) {
@@ -158,6 +211,7 @@ public class SensorService extends Service implements SensorEventListener {
         super.onCreate();
 
         dbHelper = DBHelper.getInstance(getApplicationContext());
+
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(MainActivity.TYPE_ACCELEROMETER);
@@ -182,7 +236,10 @@ public class SensorService extends Service implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-
+        // init windows
+        x_window = new ArrayList<>();
+        y_window = new ArrayList<>();
+        z_window = new ArrayList<>();
         startForeground(Process.myPid(), new Notification());
         registerListener();
         wakeLock.acquire();
@@ -239,18 +296,20 @@ public class SensorService extends Service implements SensorEventListener {
         final long curTimeStamp;
         final long curTime;
         final float[] accelerometerMatrix;
+        final float[] accelerometerVarianceMatrix;
         final float[] gyroscopeMatrix;
         final float[] gravityMatrix;
         final float[] magneticMatrix;
         final float[] rotationMatrix;
 
         //Store the current sensor array values into THIS objects arrays, and db insert from this object
-        public InsertHandler(long curTimeStamp, long curTime, float[] accelerometerMatrix,
+        public InsertHandler(long curTimeStamp, long curTime, float[] accelerometerMatrix, float[] accelerometerVarianceMatrix,
                              float[] gyroscopeMatrix, float[] gravityMatrix,
                              float[] magneticMatrix, float[] rotationMatrix) {
             this.curTimeStamp = curTimeStamp;
             this.curTime = curTime;
             this.accelerometerMatrix = accelerometerMatrix;
+            this.accelerometerVarianceMatrix = accelerometerVarianceMatrix;
             this.gyroscopeMatrix = gyroscopeMatrix;
             this.gravityMatrix = gravityMatrix;
             this.magneticMatrix = magneticMatrix;
@@ -262,6 +321,7 @@ public class SensorService extends Service implements SensorEventListener {
                     this.curTimeStamp,
                     this.curTime,
                     this.accelerometerMatrix,
+                    this.accelerometerVarianceMatrix,
                     this.gyroscopeMatrix,
                     this.gravityMatrix,
                     this.magneticMatrix,

@@ -61,6 +61,9 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATA_ACCX = "accX";
     public static final String DATA_ACCY = "accY";
     public static final String DATA_ACCZ = "accZ";
+    public static final String DATA_ACCX_V = "accX_V";
+    public static final String DATA_ACCY_V = "accY_V";
+    public static final String DATA_ACCZ_V = "accZ_V";
     public static final String DATA_GYROX = "gyroX";
     public static final String DATA_GYROY = "gyroY";
     public static final String DATA_GYROZ = "gyroZ";
@@ -88,6 +91,9 @@ public class DBHelper extends SQLiteOpenHelper {
                     DATA_ACCX + " REAL, " +
                     DATA_ACCY + " REAL, " +
                     DATA_ACCZ + " REAL, " +
+                    DATA_ACCX_V + " REAL, " +
+                    DATA_ACCY_V+ " REAL, " +
+                    DATA_ACCZ_V+ " REAL, " +
                     DATA_GYROX + " REAL, " +
                     DATA_GYROY + " REAL, " +
                     DATA_GYROZ + " REAL, " +
@@ -285,7 +291,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void insertDataTemp(Long subNum, long time_stamp, long time,
                               float[] acc,
-                              float[] gyro,
+                               float[] acc_v,
+                               float[] gyro,
                               float[] grav,
                               float[] mag,
                               float[] rot) throws SQLException {
@@ -298,6 +305,9 @@ public class DBHelper extends SQLiteOpenHelper {
         sensorValues.put(DATA_ACCX, acc[0]);
         sensorValues.put(DATA_ACCY, acc[1]);
         sensorValues.put(DATA_ACCZ, acc[2]);
+        sensorValues.put(DATA_ACCX_V, acc_v[0]);
+        sensorValues.put(DATA_ACCY_V, acc_v[1]);
+        sensorValues.put(DATA_ACCZ_V, acc_v[2]);
         sensorValues.put(DATA_GYROX, gyro[0]);
         sensorValues.put(DATA_GYROY, gyro[1]);
         sensorValues.put(DATA_GYROZ, gyro[2]);
@@ -357,7 +367,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
                     curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
                     curCSV.getString(9), curCSV.getString(10), curCSV.getString(11),
-                    curCSV.getString(12), curCSV.getString(13), curCSV.getString(14),};
+                    curCSV.getString(12), curCSV.getString(13), curCSV.getString(14),
+                    curCSV.getString(15), curCSV.getString(16), curCSV.getString(17)};
             csvWrite.writeNext(arrStr);
 
             if ((writeCounter % 1000) == 0){
