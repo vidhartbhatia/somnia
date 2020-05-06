@@ -47,7 +47,9 @@ class MyFrame(wx.Frame):
         accY = []
         accX = []
         tags = []
-        with open(f"Tagging{os.sep}vids_426_tagging.csv", 'r') as f:
+        # with open(f"Tagging{os.sep}vids_420_tagging.csv", 'r') as f:
+        with open(f"Data{os.sep}udit 5-5{os.sep}tags.csv", 'r') as f:
+
             data = csv.DictReader(f, delimiter=',')
             for row in data:
                 # if len(tags) >=10000: break
@@ -55,8 +57,9 @@ class MyFrame(wx.Frame):
 
         # for 4-26 1587887526800
         # 4-17 1587115911544
+        # 420 - 1587368475096
 
-        with open(f"Data{os.sep}vids 4-26{os.sep}426.csv", 'r') as f:
+        with open(f"Data{os.sep}udit 5-5{os.sep}50501.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             index = 0
             for row in data:
@@ -65,7 +68,7 @@ class MyFrame(wx.Frame):
                 time.append(int(row['time']))
                 if index == 0:
                     dtime.append(
-                        datetime.datetime.fromtimestamp(int(1587887526800)/1000))
+                        datetime.datetime.fromtimestamp(int(1588669309153)/1000))
                 else:
                     dtime.append(dtime[index-1] +
                                  datetime.timedelta(milliseconds=100))
@@ -101,11 +104,11 @@ class MyFrame(wx.Frame):
        
         for i in range(len(accZ)):
             self.varZ[i] = np.var(
-                self.accZ[max(0, i-VAR_WINDOW2//2):i+VAR_WINDOW2//2])
+                self.accZ[max(0, i-VAR_WINDOW1):i])
             self.varY[i] = np.var(
-                self.accY[max(0, i-VAR_WINDOW2//2):i+VAR_WINDOW2//2])
+                self.accY[max(0, i-VAR_WINDOW1):i])
             self.varX[i] = np.var(
-                self.accX[max(0, i-VAR_WINDOW2//2):i+VAR_WINDOW2//2])
+                self.accX[max(0, i-VAR_WINDOW1):i])
             self.varAcc[i] = self.varZ[i]+self.varX[i]+self.varY[i]
 
         self.varZ2 = np.zeros(len(accZ))
@@ -168,7 +171,7 @@ class MyFrame(wx.Frame):
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
                                self.tags[self.i_start:self.i_end])[0]
 
-        self.midPlot.set_ylim(0, 0.1)
+        self.midPlot.set_ylim(0, 0.01)
         self.bottPlot.set_ylim(0, 3.1)
 
     def draw_plot(self):
@@ -205,7 +208,7 @@ class MyFrame(wx.Frame):
         # self.topPlot.set_ylim(9.5,9.7 )
         # self.midPlot.set_ylim((min(self.varZ[self.i_start:self.i_end]),
         #                     max(self.varZ[self.i_start:self.i_end])))
-        self.midPlot.set_ylim(0, 0.1)
+        self.midPlot.set_ylim(0, 0.01)
         # self.bottPlot.set_ylim((min(self.varY[self.i_start:self.i_end]),
         #                     max(self.varY[self.i_start:self.i_end])))
         self.bottPlot.set_ylim(0, 3.1)

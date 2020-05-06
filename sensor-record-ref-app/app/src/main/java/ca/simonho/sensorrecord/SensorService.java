@@ -22,6 +22,8 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,7 +35,13 @@ public class SensorService extends Service implements SensorEventListener {
 
 
     public static final int SCREEN_OFF_RECEIVER_DELAY = 100;
-    public static final int WINDOW_SIZE = 5*60 * 10; // 5 minutes
+    public static final int WINDOW_SIZE_1_MIN = 60 * 10; // 1 minutes
+    public static final int WINDOW_SIZE_6_MIN = 6* 60 * 10; // 6 minutes
+    public static final int WINDOW_SIZE_10_MIN = 10 * 60 * 10; // 10 minutes
+    public static final int WINDOW_SIZE_20_MIN = 20* 60 * 10; // 20 minutes
+    public static final int WINDOW_SIZE_30_MIN = 30 * 60 * 10; // 20 minutes
+
+
 
     //This can't be set below 10ms due to Android/hardware limitations. Use 9 to get more accurate 10ms intervals
     final short POLL_FREQUENCY = 99; //in milliseconds
@@ -41,6 +49,14 @@ public class SensorService extends Service implements SensorEventListener {
     private long lastUpdate = -1;
     long curTimeStamp;
     long curTime;
+
+    private DescriptiveStatistics  accelX_1, accelY_1, accelZ_1;
+    private DescriptiveStatistics  accelX_6, accelY_6, accelZ_6;
+    private DescriptiveStatistics  accelX_10, accelY_10, accelZ_10;
+    private DescriptiveStatistics  accelX_20, accelY_20, accelZ_20;
+    private DescriptiveStatistics  accelX_30, accelY_30, accelZ_30;
+
+
 
     public ArrayList<Float> x_window;
     public ArrayList<Float> y_window;
@@ -170,26 +186,53 @@ public class SensorService extends Service implements SensorEventListener {
             // add to windows
             if (i == MainActivity.TYPE_ACCELEROMETER) {
 
-                x_window.add(accelerometerMatrix[0]);
-                x_sum += accelerometerMatrix[0];
-                y_window.add(accelerometerMatrix[1]);
-                y_sum += accelerometerMatrix[1];
-                z_window.add(accelerometerMatrix[2]);
-                z_sum += accelerometerMatrix[2];
+                accelX_1.addValue(accelerometerMatrix[0]);
+                accelY_1.addValue(accelerometerMatrix[1]);
+                accelZ_1.addValue(accelerometerMatrix[2]);
 
-                if (x_window.size() >= WINDOW_SIZE) {
-                    x_sum -= x_window.get(0);
-                    y_sum -= y_window.get(0);
-                    z_sum -= z_window.get(0);
+                accelX_6.addValue(accelerometerMatrix[0]);
+                accelY_6.addValue(accelerometerMatrix[1]);
+                accelZ_6.addValue(accelerometerMatrix[2]);
 
-                    x_window.remove(0);
-                    y_window.remove(0);
-                    z_window.remove(0);
-                }
+                accelX_10.addValue(accelerometerMatrix[0]);
+                accelY_10.addValue(accelerometerMatrix[1]);
+                accelZ_10.addValue(accelerometerMatrix[2]);
 
-                accelerometerVarianceMatrix[0] = (float)(variance(x_window, x_sum));
-                accelerometerVarianceMatrix[1] = (float)(variance(y_window, y_sum));
-                accelerometerVarianceMatrix[2] = (float)(variance(z_window, z_sum));
+                accelX_20.addValue(accelerometerMatrix[0]);
+                accelY_20.addValue(accelerometerMatrix[1]);
+                accelZ_20.addValue(accelerometerMatrix[2]);
+
+                accelX_30.addValue(accelerometerMatrix[0]);
+                accelY_30.addValue(accelerometerMatrix[1]);
+                accelZ_30.addValue(accelerometerMatrix[2]);
+
+                accelerometerVarianceMatrix[0] = (float) accelX_1.getVariance();
+                accelerometerVarianceMatrix[1] = (float) accelY_1.getVariance();
+                accelerometerVarianceMatrix[2] = (float) accelZ_1.getVariance();
+                // mean median min max variance
+                // window sizes 1 6 10 20 30 minutes
+
+
+//                x_window.add(accelerometerMatrix[0]);
+//                x_sum += accelerometerMatrix[0];
+//                y_window.add(accelerometerMatrix[1]);
+//                y_sum += accelerometerMatrix[1];
+//                z_window.add(accelerometerMatrix[2]);
+//                z_sum += accelerometerMatrix[2];
+//
+//                if (x_window.size() >= WINDOW_SIZE) {
+//                    x_sum -= x_window.get(0);
+//                    y_sum -= y_window.get(0);
+//                    z_sum -= z_window.get(0);
+//
+//                    x_window.remove(0);
+//                    y_window.remove(0);
+//                    z_window.remove(0);
+//                }
+//
+//                accelerometerVarianceMatrix[0] = (float)(variance(x_window, x_sum));
+//                accelerometerVarianceMatrix[1] = (float)(variance(y_window, y_sum));
+//                accelerometerVarianceMatrix[2] = (float)(variance(z_window, z_sum));
 
             }
 
@@ -211,6 +254,46 @@ public class SensorService extends Service implements SensorEventListener {
         super.onCreate();
 
         dbHelper = DBHelper.getInstance(getApplicationContext());
+        accelX_1 = new DescriptiveStatistics();
+        accelY_1 = new DescriptiveStatistics();
+        accelZ_1 = new DescriptiveStatistics();
+
+        accelX_6 = new DescriptiveStatistics();
+        accelY_6 = new DescriptiveStatistics();
+        accelZ_6 = new DescriptiveStatistics();
+
+        accelX_10 = new DescriptiveStatistics();
+        accelY_10 = new DescriptiveStatistics();
+        accelZ_10 = new DescriptiveStatistics();
+
+        accelX_20 = new DescriptiveStatistics();
+        accelY_20 = new DescriptiveStatistics();
+        accelZ_20 = new DescriptiveStatistics();
+
+        accelX_30 = new DescriptiveStatistics();
+        accelY_30 = new DescriptiveStatistics();
+        accelZ_30 = new DescriptiveStatistics();
+
+
+        accelX_1.setWindowSize(WINDOW_SIZE_1_MIN);
+        accelY_1.setWindowSize(WINDOW_SIZE_1_MIN);
+        accelZ_1.setWindowSize(WINDOW_SIZE_1_MIN);
+
+        accelX_6.setWindowSize(WINDOW_SIZE_6_MIN);
+        accelY_6.setWindowSize(WINDOW_SIZE_6_MIN);
+        accelZ_6.setWindowSize(WINDOW_SIZE_6_MIN);
+
+        accelX_10.setWindowSize(WINDOW_SIZE_10_MIN);
+        accelY_10.setWindowSize(WINDOW_SIZE_10_MIN);
+        accelZ_10.setWindowSize(WINDOW_SIZE_10_MIN);
+
+        accelX_20.setWindowSize(WINDOW_SIZE_20_MIN);
+        accelY_20.setWindowSize(WINDOW_SIZE_20_MIN);
+        accelZ_20.setWindowSize(WINDOW_SIZE_20_MIN);
+
+        accelX_30.setWindowSize(WINDOW_SIZE_30_MIN);
+        accelY_30.setWindowSize(WINDOW_SIZE_30_MIN);
+        accelZ_30.setWindowSize(WINDOW_SIZE_30_MIN);
 
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
