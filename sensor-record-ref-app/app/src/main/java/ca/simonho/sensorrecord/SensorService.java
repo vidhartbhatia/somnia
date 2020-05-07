@@ -47,6 +47,7 @@ public class SensorService extends Service implements SensorEventListener {
 
 
     public static final int SCREEN_OFF_RECEIVER_DELAY = 100;
+
     public static final int WINDOW_SIZE_1_MIN = 60 * 10; // 1 minutes
     public static final int WINDOW_SIZE_6_MIN = 5 * 60 * 10; // 5 minutes
     public static final int WINDOW_SIZE_10_MIN = 10 * 60 * 10; // 10 minutes
@@ -264,8 +265,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         AssetManager assetManager = getAssets();
         try {
-            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_model_final_random_forest.model"));
-
+            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_model_random_forest_final_data.model"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {

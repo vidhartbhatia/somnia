@@ -47,19 +47,31 @@ class MyFrame(wx.Frame):
         accY = []
         accX = []
         tags = []
-        # with open(f"Tagging{os.sep}vids_420_tagging.csv", 'r') as f:
-        with open(f"Data{os.sep}udit 5-5{os.sep}tags.csv", 'r') as f:
+        tags2 = []
+
+        # with open(f"50615.csv", 'r') as f:
+        #     data = csv.DictReader(f, delimiter=',')
+        #     for row in data:
+        #         # if len(tags) >=10000: break
+        #         phase = int(row['phase'])
+        #         if (phase != -1):
+        #             tags.extend([phase]*600)
+        # with open(f"Tagging{os.sep}vis_tagging_506_final.csv", 'r') as f:
+        with open(f"Data{os.sep}vids 4-16{os.sep}416_final2.csv", 'r') as f:
 
             data = csv.DictReader(f, delimiter=',')
             for row in data:
                 # if len(tags) >=10000: break
-                tags.extend([int(row['tags'])]*600)
+                tags.extend([int(row['predicted'])]*600)
+                tags2.extend([int(row['tags'])]*600)
 
+        # tags2 = tags
         # for 4-26 1587887526800
         # 4-17 1587115911544
         # 420 - 1587368475096
+        # vids 5-6
 
-        with open(f"Data{os.sep}udit 5-5{os.sep}50501.csv", 'r') as f:
+        with open(f"Data{os.sep}vids 4-16{os.sep}416.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             index = 0
             for row in data:
@@ -68,7 +80,7 @@ class MyFrame(wx.Frame):
                 time.append(int(row['time']))
                 if index == 0:
                     dtime.append(
-                        datetime.datetime.fromtimestamp(int(1588669309153)/1000))
+                        datetime.datetime.fromtimestamp(int(1587028916380)/1000))
                 else:
                     dtime.append(dtime[index-1] +
                                  datetime.timedelta(milliseconds=100))
@@ -89,6 +101,7 @@ class MyFrame(wx.Frame):
         self.accY = np.array(accY)
         self.accX = np.array(accX)
         self.tags = np.array(tags)
+        self.tags2 = np.array(tags2)
 
         # self.fx = np.zeros(len(accZ))
         # self.fx[0] = self.accZ[0]
@@ -101,7 +114,7 @@ class MyFrame(wx.Frame):
         self.varY = np.zeros(len(accY))
         self.varX = np.zeros(len(accX))
         self.varAcc = np.zeros(len(accZ))
-       
+
         for i in range(len(accZ)):
             self.varZ[i] = np.var(
                 self.accZ[max(0, i-VAR_WINDOW1):i])
@@ -125,13 +138,14 @@ class MyFrame(wx.Frame):
             self.varAcc2[i] = self.varZ2[i]+self.varX2[i]+self.varY2[i]
         # print(self.varZ[:100])
 
+
         # Extents of data sequence:
         self.i_min = 0
         self.i_max = len(self.t)
         # print(self.i_max)
 
         # Size of plot window:
-        self.i_window = 10*60*60
+        self.i_window = 10*60*60*5
         self.scrollWindow = 10*60*10
 
         # Indices of data interval to be plotted:
@@ -163,13 +177,18 @@ class MyFrame(wx.Frame):
         #                          self.varX[self.i_start:self.i_end], 'b', linewidth=0.5)[0]
         self.plot_accVar = \
             self.midPlot.plot(self.t[self.i_start:self.i_end],
-                              self.varAcc[self.i_start:self.i_end], 'b')[0]
+                              self.varAcc[self.i_start:self.i_end], 'b',)[0]
+
         self.plot_accVar2 = \
             self.midPlot.plot(self.t[self.i_start:self.i_end],
                               self.varAcc2[self.i_start:self.i_end], 'g')[0]
         self.plot_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.tags[self.i_start:self.i_end])[0]
+                               self.tags[self.i_start:self.i_end], 'b', label='predicted')[0]
+        self.plot_tags2 = \
+            self.bottPlot.plot(self.t[self.i_start:self.i_end],
+                               self.tags2[self.i_start:self.i_end], 'r', label='labeled')[0]
+        self.bottPlot.legend([self.plot_tags, self.plot_tags2])
 
         self.midPlot.set_ylim(0, 0.01)
         self.bottPlot.set_ylim(0, 3.1)
@@ -186,6 +205,7 @@ class MyFrame(wx.Frame):
         # self.plot_accVarY.set_xdata(self.t[self.i_start:self.i_end])
         # self.plot_accVarX.set_xdata(self.t[self.i_start:self.i_end])
         self.plot_tags.set_xdata(self.t[self.i_start:self.i_end])
+        self.plot_tags2.set_xdata(self.t[self.i_start:self.i_end])
 
         # self.plot_rawAccZ.set_ydata(self.accZ[self.i_start:self.i_end])
         # self.plot_smooth.set_ydata(self.fx[self.i_start:self.i_end])
@@ -195,6 +215,7 @@ class MyFrame(wx.Frame):
         # self.plot_accVarY.set_ydata(self.varY[self.i_start:self.i_end])
         # self.plot_accVarX.set_ydata(self.varX[self.i_start:self.i_end])
         self.plot_tags.set_ydata(self.tags[self.i_start:self.i_end])
+        self.plot_tags2.set_ydata(self.tags2[self.i_start:self.i_end])
 
         # Adjust plot limits:
         # self.topPlot.set_xlim((min(self.t[self.i_start:self.i_end]),
