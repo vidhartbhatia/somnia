@@ -265,7 +265,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         AssetManager assetManager = getAssets();
         try {
-            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_model_random_forest_final_data.model"));
+            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_model_random_forest_old_data.model"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
