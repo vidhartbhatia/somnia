@@ -57,8 +57,7 @@ class MyFrame(wx.Frame):
         #         if (phase != -1):
         #             tags.extend([phase]*600)
         # with open(f"Tagging{os.sep}vis_tagging_506_final.csv", 'r') as f:
-        with open(f"meds507.csv", 'r') as f:
-
+        with open(f"Data{os.sep}vids 5-8{os.sep}50824.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             for row in data:
                 # if len(tags) >=10000: break
@@ -73,7 +72,7 @@ class MyFrame(wx.Frame):
         # 420 - 1587368475096
         # vids 5-6
 
-        with open(f"meds507.csv", 'r') as f:
+        with open(f"Data{os.sep}vids 5-8{os.sep}50824.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             index = 0
             for row in data:
@@ -82,7 +81,7 @@ class MyFrame(wx.Frame):
                 time.append(int(row['time']))
                 if index == 0:
                     dtime.append(
-                        datetime.datetime.fromtimestamp(int(1588844557982)/1000))
+                        datetime.datetime.fromtimestamp(int(1588929844328)/1000))
                 else:
                     dtime.append(dtime[index-1] +
                                  datetime.timedelta(milliseconds=100))
@@ -147,7 +146,7 @@ class MyFrame(wx.Frame):
         # print(self.i_max)
 
         # Size of plot window:
-        self.i_window = 10*60*60*5
+        self.i_window = 10*60*60
         self.scrollWindow = 10*60*10
 
         # Indices of data interval to be plotted:
