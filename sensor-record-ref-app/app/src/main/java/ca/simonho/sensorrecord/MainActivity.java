@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.*;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     SensorManager mSensorManager;
     DBHelper dbHelper;
     public Logger logger;
+
+
 
     //App flags
     public static Boolean dataRecordStarted;
@@ -74,6 +77,8 @@ public class MainActivity extends AppCompatActivity
 
         inflater = (LayoutInflater) this
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+
 
         //Create the logger
         String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();

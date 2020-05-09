@@ -59,16 +59,13 @@ class MyFrame(wx.Frame):
         #         if (phase != -1):
         #             tags.extend([phase]*600)
         # with open(f"Tagging{os.sep}udit50601_final.csv", 'r') as f:
-        T = time.time()
         with open(f"Data{os.sep}vids 4-16{os.sep}416_final2.csv", 'r') as f:
 
             data = csv.DictReader(f, delimiter=',')
             for row in data:
-                if len(tags) >=100000: break
+                # if len(tags) >=10000: break
                 tags.extend([int(row['predicted'])]*600)
                 tags2.extend([int(row['tags'])]*600)
-        print(f"done loading tagged data in {time.time()-T} seconds")
-        T = time.time()
         # tags = tags2
         # tags2 = tags
         # for 4-26 1587887526800
@@ -95,8 +92,6 @@ class MyFrame(wx.Frame):
                 accX.append(float(row['accX']))
                 index += 1
         # time = list(map(lambda x: x, map(lambda t: t-time[0], time)))
-        print(f"done loading raw data in {time.time()-T} seconds")
-        T = time.time()
         # tags.extend([5] * (len(time) - len(tags)))
         print(len(dtime), len(tags))
         # time = time[:len(tags)]
@@ -120,9 +115,6 @@ class MyFrame(wx.Frame):
         self.varY = np.zeros(len(accY))
         self.varX = np.zeros(len(accX))
         self.varAcc = np.zeros(len(accZ))
-
-        print(f"done converting to np in {time.time()-T} seconds")
-        T = time.time()
 
         for i in range(len(accZ)):
             self.varZ[i] = np.var(
