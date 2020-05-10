@@ -1,9 +1,11 @@
 # importing csv module 
 import csv 
 import datetime
+import time
 import statistics
 import os
 import pprint
+import numpy as np
 pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
@@ -16,7 +18,7 @@ ROW_LIMIT = None # set to none if want all
 # fields = [] 
 rows = [] 
 
-  
+T = time.time()
 # reading csv file 
 with open(f"Data{os.sep}{dataFolder}{os.sep}{data_file_name}.csv", 'r') as csvfile: 
     # creating a csv reader object 
@@ -80,115 +82,130 @@ for j in range(1, num_minutes):
         accXs1[j-1].append(float(rows[i]['accX']))
         accYs1[j-1].append(float(rows[i]['accY']))
         accZs1[j-1].append(float(rows[i]['accZ']))
+    accXs1[j-1] = np.array(accXs1[j-1])
+    accYs1[j-1] = np.array(accYs1[j-1])
+    accZs1[j-1] = np.array(accZs1[j-1])
 
     # 5
     for i in range(max(0, (j-5) * points_per_min), j * points_per_min):
         accXs5[j-1].append(float(rows[i]['accX']))
         accYs5[j-1].append(float(rows[i]['accY']))
         accZs5[j-1].append(float(rows[i]['accZ']))
+    accXs5[j-1] = np.array(accXs5[j-1])
+    accYs5[j-1] = np.array(accYs5[j-1])
+    accZs5[j-1] = np.array(accZs5[j-1])
+
 
     # 10
     for i in range(max(0, (j-10) * points_per_min), j * points_per_min):
         accXs10[j-1].append(float(rows[i]['accX']))
         accYs10[j-1].append(float(rows[i]['accY']))
         accZs10[j-1].append(float(rows[i]['accZ']))
+    accXs10[j-1] = np.array(accXs10[j-1])
+    accYs10[j-1] = np.array(accYs10[j-1])
+    accZs10[j-1] = np.array(accZs10[j-1])
 
      # 20
     for i in range(max(0, (j-20) * points_per_min), j * points_per_min):
         accXs20[j-1].append(float(rows[i]['accX']))
         accYs20[j-1].append(float(rows[i]['accY']))
         accZs20[j-1].append(float(rows[i]['accZ']))
-
+    accXs20[j-1] = np.array(accXs20[j-1])
+    accYs20[j-1] = np.array(accYs20[j-1])
+    accZs20[j-1] = np.array(accZs20[j-1])
      # 30
     for i in range(max(0, (j-30) * points_per_min), j * points_per_min):
         accXs30[j-1].append(float(rows[i]['accX']))
         accYs30[j-1].append(float(rows[i]['accY']))
         accZs30[j-1].append(float(rows[i]['accZ']))
+    accXs30[j-1] = np.array(accXs30[j-1])
+    accYs30[j-1] = np.array(accYs30[j-1])
+    accZs30[j-1] = np.array(accZs30[j-1])
 
 # mean
-accX_means1 = ['accX_means1'] + [statistics.mean(x) for x in accXs1]
-accY_means1 = ['accY_means1'] + [statistics.mean(x) for x in accYs1]
-accZ_means1 = ['accZ_means1'] + [statistics.mean(x) for x in accZs1]
-accX_means5 = ['accX_means5'] + [statistics.mean(x) for x in accXs5]
-accY_means5 = ['accY_means5'] + [statistics.mean(x) for x in accYs5]
-accZ_means5 = ['accZ_means5'] + [statistics.mean(x) for x in accZs5]
-accX_means10 = ['accX_means10'] + [statistics.mean(x) for x in accXs10]
-accY_means10 = ['accY_means10'] + [statistics.mean(x) for x in accYs10]
-accZ_means10 = ['accZ_means10'] + [statistics.mean(x) for x in accZs10]
-accX_means20 = ['accX_means20'] + [statistics.mean(x) for x in accXs20]
-accY_means20 = ['accY_means20'] + [statistics.mean(x) for x in accYs20]
-accZ_means20 = ['accZ_means20'] + [statistics.mean(x) for x in accZs20]
-accX_means30 = ['accX_means30'] + [statistics.mean(x) for x in accXs30]
-accY_means30 = ['accY_means30'] + [statistics.mean(x) for x in accYs30]
-accZ_means30 = ['accZ_means30'] + [statistics.mean(x) for x in accZs30]
+accX_means1 = ['accX_means1'] + [np.mean(x) for x in accXs1]
+accY_means1 = ['accY_means1'] + [np.mean(x) for x in accYs1]
+accZ_means1 = ['accZ_means1'] + [np.mean(x) for x in accZs1]
+accX_means5 = ['accX_means5'] + [np.mean(x) for x in accXs5]
+accY_means5 = ['accY_means5'] + [np.mean(x) for x in accYs5]
+accZ_means5 = ['accZ_means5'] + [np.mean(x) for x in accZs5]
+accX_means10 = ['accX_means10'] + [np.mean(x) for x in accXs10]
+accY_means10 = ['accY_means10'] + [np.mean(x) for x in accYs10]
+accZ_means10 = ['accZ_means10'] + [np.mean(x) for x in accZs10]
+accX_means20 = ['accX_means20'] + [np.mean(x) for x in accXs20]
+accY_means20 = ['accY_means20'] + [np.mean(x) for x in accYs20]
+accZ_means20 = ['accZ_means20'] + [np.mean(x) for x in accZs20]
+accX_means30 = ['accX_means30'] + [np.mean(x) for x in accXs30]
+accY_means30 = ['accY_means30'] + [np.mean(x) for x in accYs30]
+accZ_means30 = ['accZ_means30'] + [np.mean(x) for x in accZs30]
 
 # median
-accX_medians1 = ['accX_medians1'] + [statistics.median(x) for x in accXs1]
-accY_medians1 = ['accY_medians1'] + [statistics.median(x) for x in accYs1]
-accZ_medians1 = ['accZ_medians1'] + [statistics.median(x) for x in accZs1]
-accX_medians5 = ['accX_medians5'] + [statistics.median(x) for x in accXs5]
-accY_medians5 = ['accY_medians5'] + [statistics.median(x) for x in accYs5]
-accZ_medians5 = ['accZ_medians5'] + [statistics.median(x) for x in accZs5]
-accX_medians10 = ['accX_medians10'] + [statistics.median(x) for x in accXs10]
-accY_medians10 = ['accY_medians10'] + [statistics.median(x) for x in accYs10]
-accZ_medians10 = ['accZ_medians10'] + [statistics.median(x) for x in accZs10]
-accX_medians20 = ['accX_medians20'] + [statistics.median(x) for x in accXs20]
-accY_medians20 = ['accY_medians20'] + [statistics.median(x) for x in accYs20]
-accZ_medians20 = ['accZ_medians20'] + [statistics.median(x) for x in accZs20]
-accX_medians30 = ['accX_medians30'] + [statistics.median(x) for x in accXs30]
-accY_medians30 = ['accY_medians30'] + [statistics.median(x) for x in accYs30]
-accZ_medians30 = ['accZ_medians30'] + [statistics.median(x) for x in accZs30]
+accX_medians1 = ['accX_medians1'] + [np.median(x) for x in accXs1]
+accY_medians1 = ['accY_medians1'] + [np.median(x) for x in accYs1]
+accZ_medians1 = ['accZ_medians1'] + [np.median(x) for x in accZs1]
+accX_medians5 = ['accX_medians5'] + [np.median(x) for x in accXs5]
+accY_medians5 = ['accY_medians5'] + [np.median(x) for x in accYs5]
+accZ_medians5 = ['accZ_medians5'] + [np.median(x) for x in accZs5]
+accX_medians10 = ['accX_medians10'] + [np.median(x) for x in accXs10]
+accY_medians10 = ['accY_medians10'] + [np.median(x) for x in accYs10]
+accZ_medians10 = ['accZ_medians10'] + [np.median(x) for x in accZs10]
+accX_medians20 = ['accX_medians20'] + [np.median(x) for x in accXs20]
+accY_medians20 = ['accY_medians20'] + [np.median(x) for x in accYs20]
+accZ_medians20 = ['accZ_medians20'] + [np.median(x) for x in accZs20]
+accX_medians30 = ['accX_medians30'] + [np.median(x) for x in accXs30]
+accY_medians30 = ['accY_medians30'] + [np.median(x) for x in accYs30]
+accZ_medians30 = ['accZ_medians30'] + [np.median(x) for x in accZs30]
 
 # max
-accX_maxes1 = ['accX_maxes1'] + [max(x) for x in accXs1]
-accY_maxes1 = ['accY_maxes1'] + [max(x) for x in accYs1]
-accZ_maxes1 = ['accZ_maxes1'] + [max(x) for x in accZs1]
-accX_maxes5 = ['accX_maxes5'] + [max(x) for x in accXs5]
-accY_maxes5 = ['accY_maxes5'] + [max(x) for x in accYs5]
-accZ_maxes5 = ['accZ_maxes5'] + [max(x) for x in accZs5]
-accX_maxes10 = ['accX_maxes10'] + [max(x) for x in accXs10]
-accY_maxes10 = ['accY_maxes10'] + [max(x) for x in accYs10]
-accZ_maxes10 = ['accZ_maxes10'] + [max(x) for x in accZs10]
-accX_maxes20 = ['accX_maxes20'] + [max(x) for x in accXs20]
-accY_maxes20 = ['accY_maxes20'] + [max(x) for x in accYs20]
-accZ_maxes20 = ['accZ_maxes20'] + [max(x) for x in accZs20]
-accX_maxes30 = ['accX_maxes30'] + [max(x) for x in accXs30]
-accY_maxes30 = ['accY_maxes30'] + [max(x) for x in accYs30]
-accZ_maxes30 = ['accZ_maxes30'] + [max(x) for x in accZs30]
+accX_maxes1 = ['accX_maxes1'] + [np.max(x) for x in accXs1]
+accY_maxes1 = ['accY_maxes1'] + [np.max(x) for x in accYs1]
+accZ_maxes1 = ['accZ_maxes1'] + [np.max(x) for x in accZs1]
+accX_maxes5 = ['accX_maxes5'] + [np.max(x) for x in accXs5]
+accY_maxes5 = ['accY_maxes5'] + [np.max(x) for x in accYs5]
+accZ_maxes5 = ['accZ_maxes5'] + [np.max(x) for x in accZs5]
+accX_maxes10 = ['accX_maxes10'] + [np.max(x) for x in accXs10]
+accY_maxes10 = ['accY_maxes10'] + [np.max(x) for x in accYs10]
+accZ_maxes10 = ['accZ_maxes10'] + [np.max(x) for x in accZs10]
+accX_maxes20 = ['accX_maxes20'] + [np.max(x) for x in accXs20]
+accY_maxes20 = ['accY_maxes20'] + [np.max(x) for x in accYs20]
+accZ_maxes20 = ['accZ_maxes20'] + [np.max(x) for x in accZs20]
+accX_maxes30 = ['accX_maxes30'] + [np.max(x) for x in accXs30]
+accY_maxes30 = ['accY_maxes30'] + [np.max(x) for x in accYs30]
+accZ_maxes30 = ['accZ_maxes30'] + [np.max(x) for x in accZs30]
 
 # min
-accX_mins1 = ['accX_mins1'] + [min(x) for x in accXs1]
-accY_mins1 = ['accY_mins1'] + [min(x) for x in accYs1]
-accZ_mins1 = ['accZ_mins1'] + [min(x) for x in accZs1]
-accX_mins5 = ['accX_mins5'] + [min(x) for x in accXs5]
-accY_mins5 = ['accY_mins5'] + [min(x) for x in accYs5]
-accZ_mins5 = ['accZ_mins5'] + [min(x) for x in accZs5]
-accX_mins10 = ['accX_mins10'] + [min(x) for x in accXs10]
-accY_mins10 = ['accY_mins10'] + [min(x) for x in accYs10]
-accZ_mins10 = ['accZ_mins10'] + [min(x) for x in accZs10]
-accX_mins20 = ['accX_mins20'] + [min(x) for x in accXs20]
-accY_mins20 = ['accY_mins20'] + [min(x) for x in accYs20]
-accZ_mins20 = ['accZ_mins20'] + [min(x) for x in accZs20]
-accX_mins30 = ['accX_mins30'] + [min(x) for x in accXs30]
-accY_mins30 = ['accY_mins30'] + [min(x) for x in accYs30]
-accZ_mins30 = ['accZ_mins30'] + [min(x) for x in accZs30]
+accX_mins1 = ['accX_mins1'] + [np.min(x) for x in accXs1]
+accY_mins1 = ['accY_mins1'] + [np.min(x) for x in accYs1]
+accZ_mins1 = ['accZ_mins1'] + [np.min(x) for x in accZs1]
+accX_mins5 = ['accX_mins5'] + [np.min(x) for x in accXs5]
+accY_mins5 = ['accY_mins5'] + [np.min(x) for x in accYs5]
+accZ_mins5 = ['accZ_mins5'] + [np.min(x) for x in accZs5]
+accX_mins10 = ['accX_mins10'] + [np.min(x) for x in accXs10]
+accY_mins10 = ['accY_mins10'] + [np.min(x) for x in accYs10]
+accZ_mins10 = ['accZ_mins10'] + [np.min(x) for x in accZs10]
+accX_mins20 = ['accX_mins20'] + [np.min(x) for x in accXs20]
+accY_mins20 = ['accY_mins20'] + [np.min(x) for x in accYs20]
+accZ_mins20 = ['accZ_mins20'] + [np.min(x) for x in accZs20]
+accX_mins30 = ['accX_mins30'] + [np.min(x) for x in accXs30]
+accY_mins30 = ['accY_mins30'] + [np.min(x) for x in accYs30]
+accZ_mins30 = ['accZ_mins30'] + [np.min(x) for x in accZs30]
 
 # variance
-accX_variances1 = ['accX_variances1'] + [statistics.variance(x) for x in accXs1]
-accY_variances1 = ['accY_variances1'] + [statistics.variance(x) for x in accYs1]
-accZ_variances1 = ['accZ_variances1'] + [statistics.variance(x) for x in accZs1]
-accX_variances5 = ['accX_variances5'] + [statistics.variance(x) for x in accXs5]
-accY_variances5 = ['accY_variances5'] + [statistics.variance(x) for x in accYs5]
-accZ_variances5 = ['accZ_variances5'] + [statistics.variance(x) for x in accZs5]
-accX_variances10 = ['accX_variances10'] + [statistics.variance(x) for x in accXs10]
-accY_variances10 = ['accY_variances10'] + [statistics.variance(x) for x in accYs10]
-accZ_variances10 = ['accZ_variances10'] + [statistics.variance(x) for x in accZs10]
-accX_variances20 = ['accX_variances20'] + [statistics.variance(x) for x in accXs20]
-accY_variances20 = ['accY_variances20'] + [statistics.variance(x) for x in accYs20]
-accZ_variances20 = ['accZ_variances20'] + [statistics.variance(x) for x in accZs20]
-accX_variances30 = ['accX_variances30'] + [statistics.variance(x) for x in accXs30]
-accY_variances30 = ['accY_variances30'] + [statistics.variance(x) for x in accYs30]
-accZ_variances30 = ['accZ_variances30'] + [statistics.variance(x) for x in accZs30]
+accX_variances1 = ['accX_variances1'] + [np.var(x) for x in accXs1]
+accY_variances1 = ['accY_variances1'] + [np.var(x) for x in accYs1]
+accZ_variances1 = ['accZ_variances1'] + [np.var(x) for x in accZs1]
+accX_variances5 = ['accX_variances5'] + [np.var(x) for x in accXs5]
+accY_variances5 = ['accY_variances5'] + [np.var(x) for x in accYs5]
+accZ_variances5 = ['accZ_variances5'] + [np.var(x) for x in accZs5]
+accX_variances10 = ['accX_variances10'] + [np.var(x) for x in accXs10]
+accY_variances10 = ['accY_variances10'] + [np.var(x) for x in accYs10]
+accZ_variances10 = ['accZ_variances10'] + [np.var(x) for x in accZs10]
+accX_variances20 = ['accX_variances20'] + [np.var(x) for x in accXs20]
+accY_variances20 = ['accY_variances20'] + [np.var(x) for x in accYs20]
+accZ_variances20 = ['accZ_variances20'] + [np.var(x) for x in accZs20]
+accX_variances30 = ['accX_variances30'] + [np.var(x) for x in accXs30]
+accY_variances30 = ['accY_variances30'] + [np.var(x) for x in accYs30]
+accZ_variances30 = ['accZ_variances30'] + [np.var(x) for x in accZs30]
 
 tags = ['tags'] + ['' for i in range(num_minutes)]
 
@@ -210,7 +227,4 @@ with open(outFile, "w", newline ='') as f:
     for row in rows:
         writer.writerow(row)
 
-print("done")
-
-
-
+print(f"done in {time.time()-T} seconds")
