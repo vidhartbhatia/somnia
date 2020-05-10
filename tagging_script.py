@@ -2,16 +2,21 @@
 import csv 
 import datetime
 import statistics
+import os
+import pprint
+pp = pprint.PrettyPrinter()
+pprint = pp.pprint
   
 # csv file name 
-filename = "50658"
+dataFolder = "udit 5-9"
+data_file_name = "50926"
   
 # initializing the titles and rows list 
 # fields = [] 
 rows = [] 
   
 # reading csv file 
-with open("Data/vids 5-6/" + filename + ".csv", 'r') as csvfile: 
+with open(f"Data{os.sep}{dataFolder}{os.sep}{data_file_name}.csv", 'r') as csvfile: 
     # creating a csv reader object 
     csvreader = csv.DictReader(csvfile)
       
@@ -30,7 +35,8 @@ with open("Data/vids 5-6/" + filename + ".csv", 'r') as csvfile:
   
 # start_time_str = "4/20/2020  5:21 AM"
 # start_time = datetime.datetime.strptime(start_time_str, '%m/%d/%Y  %I:%M %p')
-start_time = datetime.datetime.fromtimestamp(int(1588755530618)/1000)
+# pprint(rows[:10])
+start_time = datetime.datetime.fromtimestamp(int(rows[0]['time_stamp'])/1000)
 
 print('Start time:', start_time)
 
@@ -341,10 +347,11 @@ rows = zip(minutes, tags, accX_means1, accY_means1, accZ_means1, accX_medians1, 
     accX_means30, accY_means30, accZ_means30, accX_medians30, accY_medians30, accZ_medians30, accX_maxes30, accY_maxes30, \
     accZ_maxes30, accX_mins30, accY_mins30, accZ_mins30, accX_variances30, accY_variances30, accZ_variances30)
 
-with open("Tagging/" + filename + "_final.csv", "w", newline ='') as f:
+with open(f"Tagging{os.sep}{dataFolder}{os.sep}{data_file_name}_final.csv", "w", newline ='') as f:
     writer = csv.writer(f)
     for row in rows:
         writer.writerow(row)
+
 
 print("done")
 
