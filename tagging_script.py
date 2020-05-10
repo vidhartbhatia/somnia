@@ -10,10 +10,12 @@ pprint = pp.pprint
 # csv file name 
 dataFolder = "udit 5-9"
 data_file_name = "50926"
+ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 
 # fields = [] 
 rows = [] 
+
   
 # reading csv file 
 with open(f"Data{os.sep}{dataFolder}{os.sep}{data_file_name}.csv", 'r') as csvfile: 
@@ -22,11 +24,10 @@ with open(f"Data{os.sep}{dataFolder}{os.sep}{data_file_name}.csv", 'r') as csvfi
       
     # # extracting field names through first row 
     fields = csvreader.fieldnames 
-  
-    # extracting each data row one by one 
-    # for row in csvreader: 
-    #     rows.append(row) 
-    rows = list(csvreader)
+
+    rows = list(csvreader)[:ROW_LIMIT]
+    if ROW_LIMIT!=None:
+        rows = rows[:ROW_LIMIT]
     # get total number of rows 
     print(f"Total no. of rows: {len(rows)}")
   
@@ -42,7 +43,7 @@ print('Start time:', start_time)
 
 sampling_rate = 10
 num_minutes = len(rows) // int((sampling_rate * 60))
-print(num_minutes)
+print(f"{num_minutes//60} hours and {num_minutes%60} minutes")
 
 minutes = ['minutes']
 curr_time = start_time
@@ -53,67 +54,22 @@ for i in range(num_minutes):
 accXs1 = [[] for i in range(num_minutes-1)]
 accYs1 = [[] for i in range(num_minutes-1)]
 accZs1 = [[] for i in range(num_minutes-1)]
-gyroXs1 = [[] for i in range(num_minutes-1)]
-gyroYs1 = [[] for i in range(num_minutes-1)]
-gyroZs1 = [[] for i in range(num_minutes-1)]
-gravXs1 = [[] for i in range(num_minutes-1)]
-gravYs1 = [[] for i in range(num_minutes-1)]
-gravZs1 = [[] for i in range(num_minutes-1)]
-magXs1 = [[] for i in range(num_minutes-1)]
-magYs1 = [[] for i in range(num_minutes-1)]
-magZs1 = [[] for i in range(num_minutes-1)]
 
 accXs5 = [[] for i in range(num_minutes-1)]
 accYs5 = [[] for i in range(num_minutes-1)]
 accZs5 = [[] for i in range(num_minutes-1)]
-gyroXs5 = [[] for i in range(num_minutes-1)]
-gyroYs5 = [[] for i in range(num_minutes-1)]
-gyroZs5 = [[] for i in range(num_minutes-1)]
-gravXs5 = [[] for i in range(num_minutes-1)]
-gravYs5 = [[] for i in range(num_minutes-1)]
-gravZs5 = [[] for i in range(num_minutes-1)]
-magXs5 = [[] for i in range(num_minutes-1)]
-magYs5 = [[] for i in range(num_minutes-1)]
-magZs5 = [[] for i in range(num_minutes-1)]
 
 accXs10 = [[] for i in range(num_minutes-1)]
 accYs10 = [[] for i in range(num_minutes-1)]
 accZs10 = [[] for i in range(num_minutes-1)]
-gyroXs10 = [[] for i in range(num_minutes-1)]
-gyroYs10 = [[] for i in range(num_minutes-1)]
-gyroZs10 = [[] for i in range(num_minutes-1)]
-gravXs10 = [[] for i in range(num_minutes-1)]
-gravYs10 = [[] for i in range(num_minutes-1)]
-gravZs10 = [[] for i in range(num_minutes-1)]
-magXs10 = [[] for i in range(num_minutes-1)]
-magYs10 = [[] for i in range(num_minutes-1)]
-magZs10 = [[] for i in range(num_minutes-1)]
 
 accXs20 = [[] for i in range(num_minutes-1)]
 accYs20 = [[] for i in range(num_minutes-1)]
 accZs20 = [[] for i in range(num_minutes-1)]
-gyroXs20 = [[] for i in range(num_minutes-1)]
-gyroYs20 = [[] for i in range(num_minutes-1)]
-gyroZs20 = [[] for i in range(num_minutes-1)]
-gravXs20 = [[] for i in range(num_minutes-1)]
-gravYs20 = [[] for i in range(num_minutes-1)]
-gravZs20 = [[] for i in range(num_minutes-1)]
-magXs20 = [[] for i in range(num_minutes-1)]
-magYs20 = [[] for i in range(num_minutes-1)]
-magZs20 = [[] for i in range(num_minutes-1)]
 
 accXs30 = [[] for i in range(num_minutes-1)]
 accYs30 = [[] for i in range(num_minutes-1)]
 accZs30 = [[] for i in range(num_minutes-1)]
-gyroXs30 = [[] for i in range(num_minutes-1)]
-gyroYs30 = [[] for i in range(num_minutes-1)]
-gyroZs30 = [[] for i in range(num_minutes-1)]
-gravXs30 = [[] for i in range(num_minutes-1)]
-gravYs30 = [[] for i in range(num_minutes-1)]
-gravZs30 = [[] for i in range(num_minutes-1)]
-magXs30 = [[] for i in range(num_minutes-1)]
-magYs30 = [[] for i in range(num_minutes-1)]
-magZs30 = [[] for i in range(num_minutes-1)]
 
 points_per_min = sampling_rate * 60
 
@@ -124,75 +80,30 @@ for j in range(1, num_minutes):
         accXs1[j-1].append(float(rows[i]['accX']))
         accYs1[j-1].append(float(rows[i]['accY']))
         accZs1[j-1].append(float(rows[i]['accZ']))
-        gyroXs1[j-1].append(float(rows[i]['gyroX']))
-        gyroYs1[j-1].append(float(rows[i]['gyroY']))
-        gyroZs1[j-1].append(float(rows[i]['gyroZ']))
-        gravXs1[j-1].append(float(rows[i]['gravX']))
-        gravYs1[j-1].append(float(rows[i]['gravY']))
-        gravZs1[j-1].append(float(rows[i]['gravZ']))
-        magXs1[j-1].append(float(rows[i]['magX']))
-        magYs1[j-1].append(float(rows[i]['magY']))
-        magZs1[j-1].append(float(rows[i]['magZ']))
 
     # 5
     for i in range(max(0, (j-5) * points_per_min), j * points_per_min):
         accXs5[j-1].append(float(rows[i]['accX']))
         accYs5[j-1].append(float(rows[i]['accY']))
         accZs5[j-1].append(float(rows[i]['accZ']))
-        gyroXs5[j-1].append(float(rows[i]['gyroX']))
-        gyroYs5[j-1].append(float(rows[i]['gyroY']))
-        gyroZs5[j-1].append(float(rows[i]['gyroZ']))
-        gravXs5[j-1].append(float(rows[i]['gravX']))
-        gravYs5[j-1].append(float(rows[i]['gravY']))
-        gravZs5[j-1].append(float(rows[i]['gravZ']))
-        magXs5[j-1].append(float(rows[i]['magX']))
-        magYs5[j-1].append(float(rows[i]['magY']))
-        magZs5[j-1].append(float(rows[i]['magZ']))
 
     # 10
     for i in range(max(0, (j-10) * points_per_min), j * points_per_min):
         accXs10[j-1].append(float(rows[i]['accX']))
         accYs10[j-1].append(float(rows[i]['accY']))
         accZs10[j-1].append(float(rows[i]['accZ']))
-        gyroXs10[j-1].append(float(rows[i]['gyroX']))
-        gyroYs10[j-1].append(float(rows[i]['gyroY']))
-        gyroZs10[j-1].append(float(rows[i]['gyroZ']))
-        gravXs10[j-1].append(float(rows[i]['gravX']))
-        gravYs10[j-1].append(float(rows[i]['gravY']))
-        gravZs10[j-1].append(float(rows[i]['gravZ']))
-        magXs10[j-1].append(float(rows[i]['magX']))
-        magYs10[j-1].append(float(rows[i]['magY']))
-        magZs10[j-1].append(float(rows[i]['magZ']))
 
      # 20
     for i in range(max(0, (j-20) * points_per_min), j * points_per_min):
         accXs20[j-1].append(float(rows[i]['accX']))
         accYs20[j-1].append(float(rows[i]['accY']))
         accZs20[j-1].append(float(rows[i]['accZ']))
-        gyroXs20[j-1].append(float(rows[i]['gyroX']))
-        gyroYs20[j-1].append(float(rows[i]['gyroY']))
-        gyroZs20[j-1].append(float(rows[i]['gyroZ']))
-        gravXs20[j-1].append(float(rows[i]['gravX']))
-        gravYs20[j-1].append(float(rows[i]['gravY']))
-        gravZs20[j-1].append(float(rows[i]['gravZ']))
-        magXs20[j-1].append(float(rows[i]['magX']))
-        magYs20[j-1].append(float(rows[i]['magY']))
-        magZs20[j-1].append(float(rows[i]['magZ']))
 
      # 30
     for i in range(max(0, (j-30) * points_per_min), j * points_per_min):
         accXs30[j-1].append(float(rows[i]['accX']))
         accYs30[j-1].append(float(rows[i]['accY']))
         accZs30[j-1].append(float(rows[i]['accZ']))
-        gyroXs30[j-1].append(float(rows[i]['gyroX']))
-        gyroYs30[j-1].append(float(rows[i]['gyroY']))
-        gyroZs30[j-1].append(float(rows[i]['gyroZ']))
-        gravXs30[j-1].append(float(rows[i]['gravX']))
-        gravYs30[j-1].append(float(rows[i]['gravY']))
-        gravZs30[j-1].append(float(rows[i]['gravZ']))
-        magXs30[j-1].append(float(rows[i]['magX']))
-        magYs30[j-1].append(float(rows[i]['magY']))
-        magZs30[j-1].append(float(rows[i]['magZ']))
 
 # mean
 accX_means1 = ['accX_means1'] + [statistics.mean(x) for x in accXs1]
@@ -210,15 +121,6 @@ accZ_means20 = ['accZ_means20'] + [statistics.mean(x) for x in accZs20]
 accX_means30 = ['accX_means30'] + [statistics.mean(x) for x in accXs30]
 accY_means30 = ['accY_means30'] + [statistics.mean(x) for x in accYs30]
 accZ_means30 = ['accZ_means30'] + [statistics.mean(x) for x in accZs30]
-# gyroX_means = ['gyroX_means'] + [statistics.mean(x) for x in gyroXs]
-# gyroY_means = ['gyroY_means'] + [statistics.mean(x) for x in gyroYs]
-# gyroZ_means = ['gyroZ_means'] + [statistics.mean(x) for x in gyroZs]
-# gravX_means = ['gravX_means'] + [statistics.mean(x) for x in gravXs]
-# gravY_means = ['gravY_means'] + [statistics.mean(x) for x in gravYs]
-# gravZ_means = ['gravZ_means'] + [statistics.mean(x) for x in gravZs]
-# magX_means = ['magX_means'] + [statistics.mean(x) for x in magXs]
-# magY_means = ['magY_means'] + [statistics.mean(x) for x in magYs]
-# magZ_means = ['magZ_means'] + [statistics.mean(x) for x in magZs]
 
 # median
 accX_medians1 = ['accX_medians1'] + [statistics.median(x) for x in accXs1]
@@ -236,15 +138,6 @@ accZ_medians20 = ['accZ_medians20'] + [statistics.median(x) for x in accZs20]
 accX_medians30 = ['accX_medians30'] + [statistics.median(x) for x in accXs30]
 accY_medians30 = ['accY_medians30'] + [statistics.median(x) for x in accYs30]
 accZ_medians30 = ['accZ_medians30'] + [statistics.median(x) for x in accZs30]
-# gyroX_medians = ['gyroX_medians'] + [statistics.median(x) for x in gyroXs]
-# gyroY_medians = ['gyroY_medians'] + [statistics.median(x) for x in gyroYs]
-# gyroZ_medians = ['gyroZ_medians'] + [statistics.median(x) for x in gyroZs]
-# gravX_medians = ['gravX_medians'] + [statistics.median(x) for x in gravXs]
-# gravY_medians = ['gravY_medians'] + [statistics.median(x) for x in gravYs]
-# gravZ_medians = ['gravZ_medians'] + [statistics.median(x) for x in gravZs]
-# magX_medians = ['magX_medians'] + [statistics.median(x) for x in magXs]
-# magY_medians = ['magY_medians'] + [statistics.median(x) for x in magYs]
-# magZ_medians = ['magZ_medians'] + [statistics.median(x) for x in magZs]
 
 # max
 accX_maxes1 = ['accX_maxes1'] + [max(x) for x in accXs1]
@@ -262,15 +155,6 @@ accZ_maxes20 = ['accZ_maxes20'] + [max(x) for x in accZs20]
 accX_maxes30 = ['accX_maxes30'] + [max(x) for x in accXs30]
 accY_maxes30 = ['accY_maxes30'] + [max(x) for x in accYs30]
 accZ_maxes30 = ['accZ_maxes30'] + [max(x) for x in accZs30]
-# gyroX_maxes = ['gyroX_maxes'] + [max(x) for x in gyroXs]
-# gyroY_maxes = ['gyroY_maxes'] + [max(x) for x in gyroYs]
-# gyroZ_maxes = ['gyroZ_maxes'] + [max(x) for x in gyroZs]
-# gravX_maxes = ['gravX_maxes'] + [max(x) for x in gravXs]
-# gravY_maxes = ['gravY_maxes'] + [max(x) for x in gravYs]
-# gravZ_maxes = ['gravZ_maxes'] + [max(x) for x in gravZs]
-# magX_maxes = ['magX_maxes'] + [max(x) for x in magXs]
-# magY_maxes = ['magY_maxes'] + [max(x) for x in magYs]
-# magZ_maxes = ['magZ_maxes'] + [max(x) for x in magZs]
 
 # min
 accX_mins1 = ['accX_mins1'] + [min(x) for x in accXs1]
@@ -288,15 +172,6 @@ accZ_mins20 = ['accZ_mins20'] + [min(x) for x in accZs20]
 accX_mins30 = ['accX_mins30'] + [min(x) for x in accXs30]
 accY_mins30 = ['accY_mins30'] + [min(x) for x in accYs30]
 accZ_mins30 = ['accZ_mins30'] + [min(x) for x in accZs30]
-# gyroX_mins = ['gyroX_mins'] + [min(x) for x in gyroXs]
-# gyroY_mins = ['gyroY_mins'] + [min(x) for x in gyroYs]
-# gyroZ_mins = ['gyroZ_mins'] + [min(x) for x in gyroZs]
-# gravX_mins = ['gravX_mins'] + [min(x) for x in gravXs]
-# gravY_mins = ['gravY_mins'] + [min(x) for x in gravYs]
-# gravZ_mins = ['gravZ_mins'] + [min(x) for x in gravZs]
-# magX_mins = ['magX_mins'] + [min(x) for x in magXs]
-# magY_mins = ['magY_mins'] + [min(x) for x in magYs]
-# magZ_mins = ['magZ_mins'] + [min(x) for x in magZs]
 
 # variance
 accX_variances1 = ['accX_variances1'] + [statistics.variance(x) for x in accXs1]
@@ -314,27 +189,8 @@ accZ_variances20 = ['accZ_variances20'] + [statistics.variance(x) for x in accZs
 accX_variances30 = ['accX_variances30'] + [statistics.variance(x) for x in accXs30]
 accY_variances30 = ['accY_variances30'] + [statistics.variance(x) for x in accYs30]
 accZ_variances30 = ['accZ_variances30'] + [statistics.variance(x) for x in accZs30]
-# gyroX_variances = ['gyroX_variances'] + [statistics.variance(x) for x in gyroXs]
-# gyroY_variances = ['gyroY_variances'] + [statistics.variance(x) for x in gyroYs]
-# gyroZ_variances = ['gyroZ_variances'] + [statistics.variance(x) for x in gyroZs]
-# gravX_variances = ['gravX_variances'] + [statistics.variance(x) for x in gravXs]
-# gravY_variances = ['gravY_variances'] + [statistics.variance(x) for x in gravYs]
-# gravZ_variances = ['gravZ_variances'] + [statistics.variance(x) for x in gravZs]
-# magX_variances = ['magX_variances'] + [statistics.variance(x) for x in magXs]
-# magY_variances = ['magY_variances'] + [statistics.variance(x) for x in magYs]
-# magZ_variances = ['magZ_variances'] + [statistics.variance(x) for x in magZs]
 
 tags = ['tags'] + ['' for i in range(num_minutes)]
-
-# print(len(tags))
-
-# rows = zip(minutes, tags, accX_means, accY_means, accZ_means, gyroX_means, gyroY_means, gyroZ_means, gravX_means, gravY_means, gravZ_means, \
-# magX_means, magY_means, magZ_means, accX_medians, accY_medians, accZ_medians, gyroX_medians, gyroY_medians, gyroZ_medians, gravX_medians, \
-# gravY_medians, gravZ_medians, magX_medians, magY_medians, magZ_medians, accX_maxes, accY_maxes, accZ_maxes, gyroX_maxes, gyroY_maxes, \
-# gyroZ_maxes, gravX_maxes, gravY_maxes, gravZ_maxes, magX_maxes, magY_maxes, magZ_maxes, accX_mins, accY_mins, accZ_mins, gyroX_mins, \
-# gyroY_mins, gyroZ_mins, gravX_mins, gravY_mins, gravZ_mins, magX_mins, magY_mins, magZ_mins, accX_variances, accY_variances, accZ_variances, \
-# gyroX_variances, gyroY_variances, gyroZ_variances, gravX_variances, gravY_variances, gravZ_variances, magX_variances, magY_variances, \
-# magZ_variances)
 
 rows = zip(minutes, tags, accX_means1, accY_means1, accZ_means1, accX_medians1, accY_medians1, accZ_medians1, accX_maxes1, accY_maxes1, \
     accZ_maxes1, accX_mins1, accY_mins1, accZ_mins1, accX_variances1, accY_variances1, accZ_variances1, \
@@ -347,11 +203,12 @@ rows = zip(minutes, tags, accX_means1, accY_means1, accZ_means1, accX_medians1, 
     accX_means30, accY_means30, accZ_means30, accX_medians30, accY_medians30, accZ_medians30, accX_maxes30, accY_maxes30, \
     accZ_maxes30, accX_mins30, accY_mins30, accZ_mins30, accX_variances30, accY_variances30, accZ_variances30)
 
-with open(f"Tagging{os.sep}{dataFolder}{os.sep}{data_file_name}_final.csv", "w", newline ='') as f:
+outFile = f"Tagging{os.sep}{dataFolder}{os.sep}{data_file_name}_final.csv"
+os.makedirs(os.path.dirname(outFile), exist_ok=True)
+with open(outFile, "w", newline ='') as f:
     writer = csv.writer(f)
     for row in rows:
         writer.writerow(row)
-
 
 print("done")
 
