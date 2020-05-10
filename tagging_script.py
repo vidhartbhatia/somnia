@@ -218,7 +218,7 @@ rows = zip(minutes, tags, accX_means1, accY_means1, accZ_means1, accX_medians1, 
     accX_means20, accY_means20, accZ_means20, accX_medians20, accY_medians20, accZ_medians20, accX_maxes20, accY_maxes20, \
     accZ_maxes20, accX_mins20, accY_mins20, accZ_mins20, accX_variances20, accY_variances20, accZ_variances20, \
     accX_means30, accY_means30, accZ_means30, accX_medians30, accY_medians30, accZ_medians30, accX_maxes30, accY_maxes30, \
-    accZ_maxes30, accX_mins30, accY_mins30, accZ_mins30, accX_variances30, accY_variances30, accZ_variances30)
+    accZ_maxes30, accX_mins30, accY_mins30, accZ_mins30, accX_variances30, accY_variances30, accZ_variances30, tags)
 
 outFile = f"Tagging{os.sep}{dataFolder}{os.sep}{data_file_name}_final.csv"
 os.makedirs(os.path.dirname(outFile), exist_ok=True)
