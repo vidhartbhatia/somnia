@@ -1,3 +1,4 @@
 # files too big
 Data/oldBigBoiData/*
 .vscode\settings.json
+.vscode/*
