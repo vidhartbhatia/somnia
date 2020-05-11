@@ -19,7 +19,7 @@ rows = []
 
 T = time.time()
 # reading csv file 
-with open(f"Test_var{os.sep}{file_name}_results.csv", 'r') as csvfile: 
+with open(f"Test_var_agg{os.sep}{file_name}_results_jmt.csv", 'r') as csvfile: 
     # creating a csv reader object 
     csvreader = csv.DictReader(csvfile)
       
@@ -41,7 +41,7 @@ for i in range(len(rows)):
 
 rows = zip(predicted)
 
-outFile = f"Test_var{os.sep}{file_name}_results.csv"
+outFile = f"Test_var_agg{os.sep}{file_name}_results_jmt.csv"
 os.makedirs(os.path.dirname(outFile), exist_ok=True)
 with open(outFile, "w", newline ='') as f:
     writer = csv.writer(f)
