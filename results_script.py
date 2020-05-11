@@ -10,7 +10,7 @@ pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
 # csv file name 
-file_name = "jeremy 5-7/50704"
+file_name = "vids 5-6/50658"
 ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 
@@ -19,7 +19,7 @@ rows = []
 
 T = time.time()
 # reading csv file 
-with open(f"Test{os.sep}{file_name}_results.csv", 'r') as csvfile: 
+with open(f"Test_var{os.sep}{file_name}_results.csv", 'r') as csvfile: 
     # creating a csv reader object 
     csvreader = csv.DictReader(csvfile)
       
@@ -41,7 +41,7 @@ for i in range(len(rows)):
 
 rows = zip(predicted)
 
-outFile = f"Test{os.sep}{file_name}_results.csv"
+outFile = f"Test_var{os.sep}{file_name}_results.csv"
 os.makedirs(os.path.dirname(outFile), exist_ok=True)
 with open(outFile, "w", newline ='') as f:
     writer = csv.writer(f)
