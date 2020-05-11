@@ -346,8 +346,8 @@ public class SensorService extends Service implements SensorEventListener {
         accelZ_30.setWindowSize(WINDOW_SIZE_30_MIN);
 
         alarm = Calendar.getInstance();
-        alarm.set(Calendar.HOUR_OF_DAY, 4);
-        alarm.set(Calendar.MINUTE, 20);
+        alarm.set(Calendar.HOUR_OF_DAY, 10);
+        alarm.set(Calendar.MINUTE, 0);
         alarm.set(Calendar.SECOND, 0);
 
         String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();
@@ -811,10 +811,11 @@ public class SensorService extends Service implements SensorEventListener {
 //                    setValue(attr69, accelZ_30.getMax());
 //                    setValue(attr70, accelX_30.getMin());
 //                    setValue(attr71, accelY_30.getMin());
-                    setValue(attr72, accelX_30.getVariance() + accelY_30.getVariance() + accelZ_30.getVariance());
                     setValue(attr73, accelX_30.getVariance());
                     setValue(attr74, accelY_30.getVariance());
                     setValue(attr75, accelZ_30.getVariance());
+                    setValue(attr72, accelX_30.getVariance() + accelY_30.getVariance() + accelZ_30.getVariance());
+
 
                 }
             };
@@ -835,7 +836,8 @@ public class SensorService extends Service implements SensorEventListener {
                 if (predicted_window.size() >= PREDICTED_WINDOW_SIZE) {
                     predicted_window.remove(0);
 
-                    if (!MainActivity.fallenAsleep) {
+                    if (!MainActivity.fallenAsleep)
+                    {
                         // hasnt fallen asleep yet
                         int num_light = 0;
                         int num_deep = 0;
