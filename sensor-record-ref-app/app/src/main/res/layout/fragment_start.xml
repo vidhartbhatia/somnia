@@ -23,4 +23,11 @@
         android:layout_below="@id/startButton"
         android:layout_centerHorizontal="true"/>
 
+    <TextView
+        android:id="@+id/sleep_message"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/start_element_height"
+        android:layout_below="@id/start_recording_progress"
+        android:layout_centerHorizontal="true"/>
+
 </RelativeLayout>

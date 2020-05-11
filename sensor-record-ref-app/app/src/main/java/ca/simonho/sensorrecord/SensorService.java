@@ -1,6 +1,8 @@
 package ca.simonho.sensorrecord;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,7 +14,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -21,14 +25,24 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Process;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +56,8 @@ import weka.core.Utils;
 public class SensorService extends Service implements SensorEventListener {
 
     public static final String TAG = "SensorService";
+    public static final String SLEEP_TAG = "SLEEP";
+    private static final String CHANNEL_ID = "hello";
 
     private Classifier mClassifier = null;
 
@@ -53,6 +69,7 @@ public class SensorService extends Service implements SensorEventListener {
     public static final int WINDOW_SIZE_10_MIN = 10 * 60 * 10; // 10 minutes
     public static final int WINDOW_SIZE_20_MIN = 20 * 60 * 10; // 20 minutes
     public static final int WINDOW_SIZE_30_MIN = 30 * 60 * 10; // 20 minutes
+    public static final int PREDICTED_WINDOW_SIZE = 7; // 7 minutes
 
 
     //This can't be set below 10ms due to Android/hardware limitations. Use 9 to get more accurate 10ms intervals
@@ -61,6 +78,10 @@ public class SensorService extends Service implements SensorEventListener {
     private long lastUpdate = -1;
     private long lastUpdateMin = -1;
     long counter = 0;
+    long sleep_time = 0;
+    Calendar alarm;
+
+    File sleep_file;
 
 
     long curTimeStamp;
@@ -76,6 +97,8 @@ public class SensorService extends Service implements SensorEventListener {
     public ArrayList<Float> x_window;
     public ArrayList<Float> y_window;
     public ArrayList<Float> z_window;
+    public ArrayList<Integer> predicted_window;
+
     double x_sum = 0.0;
     double y_sum = 0.0;
     double z_sum = 0.0;
@@ -139,6 +162,9 @@ public class SensorService extends Service implements SensorEventListener {
                 break;
             case "SHOW":
                 message.arg1 = 1;
+                break;
+            case "UPDATE":
+                message.arg1 = 2;
                 break;
         }
         try {
@@ -230,13 +256,12 @@ public class SensorService extends Service implements SensorEventListener {
             if (counter > (60 * 10)) { // every minute
 
 
-//              Log.d("WEKA", "cureTIME is: " + curTimeStamp + " counter is: " + counter);
                 counter = 0;
 
                 // now spawn the model thread
 
                 try {
-                    Runnable modelHandler = new ModelTestHandler(curTimeStamp, curTime / 1000000, accelerometerVarianceMatrix, accelX_1,
+                    Runnable modelHandler = new ModelTestHandler(curTimeStamp, curTime / 1000000, accelerometerMatrix, accelerometerVarianceMatrix, accelX_1,
                             accelY_1, accelZ_1, accelX_6, accelY_6, accelZ_6, accelX_10, accelY_10, accelZ_10, accelX_20, accelY_20, accelZ_20, accelX_30, accelY_30, accelZ_30);
                     executor.execute(modelHandler);
                 } catch (SQLException e) {
@@ -265,7 +290,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         AssetManager assetManager = getAssets();
         try {
-            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_model_random_forest_old_data.model"));
+            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_final_sunday_model.model"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -273,7 +298,10 @@ public class SensorService extends Service implements SensorEventListener {
             e.printStackTrace();
         }
         Toast.makeText(this, "Model loaded, started logging", Toast.LENGTH_SHORT).show();
-        Log.d("WEKA", "loaded model: ");
+        Log.d(SLEEP_TAG, "loaded model: ");
+        MainActivity.fallenAsleep = false;
+        MainActivity.wokenUp = false;
+
 
         dbHelper = DBHelper.getInstance(getApplicationContext());
         accelX_1 = new DescriptiveStatistics();
@@ -317,6 +345,23 @@ public class SensorService extends Service implements SensorEventListener {
         accelY_30.setWindowSize(WINDOW_SIZE_30_MIN);
         accelZ_30.setWindowSize(WINDOW_SIZE_30_MIN);
 
+        alarm = Calendar.getInstance();
+        alarm.set(Calendar.HOUR_OF_DAY, 4);
+        alarm.set(Calendar.MINUTE, 20);
+        alarm.set(Calendar.SECOND, 0);
+
+        String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();
+        File exportDir = new File(pathToExternalStorage, "/SensorRecord");
+        sleep_file = new File(exportDir, "sleep_data.txt");
+
+        if (!sleep_file.exists()) {
+            try {
+                sleep_file.createNewFile();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
+
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(MainActivity.TYPE_ACCELEROMETER);
@@ -345,7 +390,10 @@ public class SensorService extends Service implements SensorEventListener {
         x_window = new ArrayList<>();
         y_window = new ArrayList<>();
         z_window = new ArrayList<>();
+        predicted_window = new ArrayList<>();
         startForeground(Process.myPid(), new Notification());
+
+
         registerListener();
         wakeLock.acquire();
 
@@ -446,6 +494,7 @@ public class SensorService extends Service implements SensorEventListener {
         final long curTimeStamp;
         final long curTime;
         final float[] accelerometerVarianceMatrix;
+        final float[] accelerometerMatrix;
         final DescriptiveStatistics accelX_1;
         final DescriptiveStatistics accelY_1;
         final DescriptiveStatistics accelZ_1;
@@ -456,7 +505,7 @@ public class SensorService extends Service implements SensorEventListener {
 
 
         //Store the current sensor array values into THIS objects arrays, and db insert from this object
-        public ModelTestHandler(long curTimeStamp, long curTime, float[] accelerometerVarianceMatrix,
+        public ModelTestHandler(long curTimeStamp, long curTime, float[] accelerometerMatrix, float[] accelerometerVarianceMatrix,
                                 DescriptiveStatistics accelX_1,
                                 DescriptiveStatistics accelY_1,
                                 DescriptiveStatistics accelZ_1,
@@ -467,6 +516,7 @@ public class SensorService extends Service implements SensorEventListener {
         ) {
             this.curTimeStamp = curTimeStamp;
             this.curTime = curTime;
+            this.accelerometerMatrix = accelerometerMatrix;
 
             this.accelerometerVarianceMatrix = accelerometerVarianceMatrix;
             this.accelX_1 = accelX_1;
@@ -501,90 +551,89 @@ public class SensorService extends Service implements SensorEventListener {
                 {
                     add("Deep"); // cls nr 1
                     add("Light"); // cls nr 2
-                    add("REM"); // cls nr 3
-                    add("Awake"); // cls nr 4
+//                    add("REM"); // cls nr 3
+//                    add("Awake"); // cls nr 4
 
                 }
             };
-// accX_means1	accY_means1	accZ_means1	accX_medians1	accY_medians1	accZ_medians1	accX_maxes1	accY_maxes1	accZ_maxes1	accX_mins1	accY_mins1	accZ_mins1	accX_variances1	accY_variances1	accZ_variances1	accX_means5	accY_means5	accZ_means5	accX_medians5	accY_medians5	accZ_medians5	accX_maxes5	accY_maxes5	accZ_maxes5	accX_mins5	accY_mins5	accZ_mins5	accX_variances5	accY_variances5	accZ_variances5	accX_means10	accY_means10	accZ_means10	accX_medians10	accY_medians10	accZ_medians10	accX_maxes10	accY_maxes10	accZ_maxes10	accX_mins10	accY_mins10	accZ_mins10	accX_variances10	accY_variances10	accZ_variances10	accX_means20	accY_means20	accZ_means20	accX_medians20	accY_medians20	accZ_medians20	accX_maxes20	accY_maxes20	accZ_maxes20	accX_mins20	accY_mins20	accZ_mins20	accX_variances20	accY_variances20	accZ_variances20	accX_means30	accY_means30	accZ_means30	accX_medians30	accY_medians30	accZ_medians30	accX_maxes30	accY_maxes30	accZ_maxes30	accX_mins30	accY_mins30	accZ_mins30	accX_variances30	accY_variances30	accZ_variances30
-            Attribute attr1 = new Attribute("accX_means1");
-            Attribute attr2 = new Attribute("accY_means1");
-            Attribute attr3 = new Attribute("accZ_means1");
-            Attribute attr4 = new Attribute("accX_medians1");
-            Attribute attr5 = new Attribute("accY_medians1");
-            Attribute attr6 = new Attribute("accZ_medians1");
-            Attribute attr7 = new Attribute("accX_maxes1");
-            Attribute attr8 = new Attribute("accY_maxes1");
-            Attribute attr9 = new Attribute("accZ_maxes1");
-            Attribute attr10 = new Attribute("accX_mins1");
-            Attribute attr11 = new Attribute("accY_mins1");
-            Attribute attr12 = new Attribute("accZ_mins1");
-            Attribute attr13 = new Attribute("accX_variances1");
-            Attribute attr14 = new Attribute("accY_variances1");
-            Attribute attr15 = new Attribute("accZ_variances1");
+//            Attribute attr1 = new Attribute("accX_means1");
+//            Attribute attr2 = new Attribute("accY_means1");
+//            Attribute attr3 = new Attribute("accZ_means1");
+//            Attribute attr4 = new Attribute("accX_medians1");
+//            Attribute attr5 = new Attribute("accY_medians1");
+//            Attribute attr6 = new Attribute("accZ_medians1");
+//            Attribute attr7 = new Attribute("accX_maxes1");
+//            Attribute attr8 = new Attribute("accY_maxes1");
+//            Attribute attr9 = new Attribute("accZ_maxes1");
+//            Attribute attr10 = new Attribute("accX_mins1");
+//            Attribute attr11 = new Attribute("accY_mins1");
+//            Attribute attr12 = new Attribute("accZ_mins1");
+//            Attribute attr13 = new Attribute("accX_variances1");
+//            Attribute attr14 = new Attribute("accY_variances1");
+//            Attribute attr15 = new Attribute("accZ_variances1");
 
-            Attribute attr16 = new Attribute("accX_means5");
-            Attribute attr17 = new Attribute("accY_means5");
-            Attribute attr18 = new Attribute("accZ_means5");
-            Attribute attr19 = new Attribute("accX_medians5");
-            Attribute attr20 = new Attribute("accY_medians5");
-            Attribute attr21 = new Attribute("accZ_medians5");
-            Attribute attr22 = new Attribute("accX_maxes5");
-            Attribute attr23 = new Attribute("accY_maxes5");
-            Attribute attr24 = new Attribute("accZ_maxes5");
-            Attribute attr25 = new Attribute("accX_mins5");
-            Attribute attr26 = new Attribute("accY_mins5");
-            Attribute attr27 = new Attribute("accZ_mins5");
+//            Attribute attr16 = new Attribute("accX_means5");
+//            Attribute attr17 = new Attribute("accY_means5");
+//            Attribute attr18 = new Attribute("accZ_means5");
+//            Attribute attr19 = new Attribute("accX_medians5");
+//            Attribute attr20 = new Attribute("accY_medians5");
+//            Attribute attr21 = new Attribute("accZ_medians5");
+//            Attribute attr22 = new Attribute("accX_maxes5");
+//            Attribute attr23 = new Attribute("accY_maxes5");
+//            Attribute attr24 = new Attribute("accZ_maxes5");
+//            Attribute attr25 = new Attribute("accX_mins5");
+//            Attribute attr26 = new Attribute("accY_mins5");
+//            Attribute attr27 = new Attribute("accZ_mins5");
             Attribute attr28 = new Attribute("accX_variances5");
             Attribute attr29 = new Attribute("accY_variances5");
             Attribute attr30 = new Attribute("accZ_variances5");
 
-            Attribute attr31 = new Attribute("accX_means10");
-            Attribute attr32 = new Attribute("accY_means10");
-            Attribute attr33 = new Attribute("accZ_means10");
-            Attribute attr34 = new Attribute("accX_medians10");
-            Attribute attr35 = new Attribute("accY_medians10");
-            Attribute attr36 = new Attribute("accZ_medians10");
-            Attribute attr37 = new Attribute("accX_maxes10");
-            Attribute attr38 = new Attribute("accY_maxes10");
-            Attribute attr39 = new Attribute("accZ_maxes10");
-            Attribute attr40 = new Attribute("accX_mins10");
-            Attribute attr41 = new Attribute("accY_mins10");
-            Attribute attr42 = new Attribute("accZ_mins10");
+            Attribute attr31 = new Attribute("aggregate5");
+//            Attribute attr32 = new Attribute("accY_means10");
+//            Attribute attr33 = new Attribute("accZ_means10");
+//            Attribute attr34 = new Attribute("accX_medians10");
+//            Attribute attr35 = new Attribute("accY_medians10");
+//            Attribute attr36 = new Attribute("accZ_medians10");
+//            Attribute attr37 = new Attribute("accX_maxes10");
+//            Attribute attr38 = new Attribute("accY_maxes10");
+//            Attribute attr39 = new Attribute("accZ_maxes10");
+//            Attribute attr40 = new Attribute("accX_mins10");
+//            Attribute attr41 = new Attribute("accY_mins10");
+//            Attribute attr42 = new Attribute("accZ_mins10");
             Attribute attr43 = new Attribute("accX_variances10");
             Attribute attr44 = new Attribute("accY_variances10");
             Attribute attr45 = new Attribute("accZ_variances10");
 
 
-            Attribute attr46 = new Attribute("accX_means20");
-            Attribute attr47 = new Attribute("accY_means20");
-            Attribute attr48 = new Attribute("accZ_means20");
-            Attribute attr49 = new Attribute("accX_medians20");
-            Attribute attr50 = new Attribute("accY_medians20");
-            Attribute attr51 = new Attribute("accZ_medians20");
-            Attribute attr52 = new Attribute("accX_maxes20");
-            Attribute attr53 = new Attribute("accY_maxes20");
-            Attribute attr54 = new Attribute("accZ_maxes20");
-            Attribute attr55 = new Attribute("accX_mins20");
-            Attribute attr56 = new Attribute("accY_mins20");
-            Attribute attr57 = new Attribute("accZ_mins20");
+            Attribute attr46 = new Attribute("aggregate10");
+//            Attribute attr47 = new Attribute("accY_means20");
+//            Attribute attr48 = new Attribute("accZ_means20");
+//            Attribute attr49 = new Attribute("accX_medians20");
+//            Attribute attr50 = new Attribute("accY_medians20");
+//            Attribute attr51 = new Attribute("accZ_medians20");
+//            Attribute attr52 = new Attribute("accX_maxes20");
+//            Attribute attr53 = new Attribute("accY_maxes20");
+//            Attribute attr54 = new Attribute("accZ_maxes20");
+//            Attribute attr55 = new Attribute("accX_mins20");
+//            Attribute attr56 = new Attribute("accY_mins20");
+//            Attribute attr57 = new Attribute("accZ_mins20");
             Attribute attr58 = new Attribute("accX_variances20");
             Attribute attr59 = new Attribute("accY_variances20");
             Attribute attr60 = new Attribute("accZ_variances20");
 
 
-            Attribute attr61 = new Attribute("accX_means30");
-            Attribute attr62 = new Attribute("accY_means30");
-            Attribute attr63 = new Attribute("accZ_means30");
-            Attribute attr64 = new Attribute("accX_medians30");
-            Attribute attr65 = new Attribute("accY_medians30");
-            Attribute attr66 = new Attribute("accZ_medians30");
-            Attribute attr67 = new Attribute("accX_maxes30");
-            Attribute attr68 = new Attribute("accY_maxes30");
-            Attribute attr69 = new Attribute("accZ_maxes30");
-            Attribute attr70 = new Attribute("accX_mins30");
-            Attribute attr71 = new Attribute("accY_mins30");
-            Attribute attr72 = new Attribute("accZ_mins30");
+            Attribute attr61 = new Attribute("aggregate20");
+//            Attribute attr62 = new Attribute("accY_means30");
+//            Attribute attr63 = new Attribute("accZ_means30");
+//            Attribute attr64 = new Attribute("accX_medians30");
+//            Attribute attr65 = new Attribute("accY_medians30");
+//            Attribute attr66 = new Attribute("accZ_medians30");
+//            Attribute attr67 = new Attribute("accX_maxes30");
+//            Attribute attr68 = new Attribute("accY_maxes30");
+//            Attribute attr69 = new Attribute("accZ_maxes30");
+//            Attribute attr70 = new Attribute("accX_mins30");
+//            Attribute attr71 = new Attribute("accY_mins30");
+            Attribute attr72 = new Attribute("aggregate30");
             Attribute attr73 = new Attribute("accX_variances30");
             Attribute attr74 = new Attribute("accY_variances30");
             Attribute attr75 = new Attribute("accZ_variances30");
@@ -595,83 +644,85 @@ public class SensorService extends Service implements SensorEventListener {
             Attribute attr76 = attributeClass;
 
             ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-            attributes.add(attr1);
-            attributes.add(attr2);
-            attributes.add(attr3);
-            attributes.add(attr4);
-            attributes.add(attr5);
-            attributes.add(attr6);
-            attributes.add(attr7);
-            attributes.add(attr8);
-            attributes.add(attr9);
-            attributes.add(attr10);
-            attributes.add(attr11);
-            attributes.add(attr12);
-            attributes.add(attr13);
-            attributes.add(attr14);
-            attributes.add(attr15);
-            attributes.add(attr16);
-            attributes.add(attr17);
-            attributes.add(attr18);
-            attributes.add(attr19);
-            attributes.add(attr20);
-            attributes.add(attr21);
-            attributes.add(attr22);
-            attributes.add(attr23);
-            attributes.add(attr24);
-            attributes.add(attr25);
-            attributes.add(attr26);
-            attributes.add(attr27);
+//            attributes.add(attr1);
+//            attributes.add(attr2);
+//            attributes.add(attr3);
+//            attributes.add(attr4);
+//            attributes.add(attr5);
+//            attributes.add(attr6);
+//            attributes.add(attr7);
+//            attributes.add(attr8);
+//            attributes.add(attr9);
+//            attributes.add(attr10);
+//            attributes.add(attr11);
+//            attributes.add(attr12);
+//            attributes.add(attr13);
+//            attributes.add(attr14);
+//            attributes.add(attr15);
+//            attributes.add(attr16);
+//            attributes.add(attr17);
+//            attributes.add(attr18);
+//            attributes.add(attr19);
+//            attributes.add(attr20);
+//            attributes.add(attr21);
+//            attributes.add(attr22);
+//            attributes.add(attr23);
+//            attributes.add(attr24);
+//            attributes.add(attr25);
+//            attributes.add(attr26);
+//            attributes.add(attr27);
             attributes.add(attr28);
             attributes.add(attr29);
             attributes.add(attr30);
             attributes.add(attr31);
-            attributes.add(attr32);
-            attributes.add(attr33);
-            attributes.add(attr34);
-            attributes.add(attr35);
-            attributes.add(attr36);
-            attributes.add(attr37);
-            attributes.add(attr38);
-            attributes.add(attr39);
-            attributes.add(attr40);
-            attributes.add(attr41);
-            attributes.add(attr42);
+//            attributes.add(attr32);
+//            attributes.add(attr33);
+//            attributes.add(attr34);
+//            attributes.add(attr35);
+//            attributes.add(attr36);
+//            attributes.add(attr37);
+//            attributes.add(attr38);
+//            attributes.add(attr39);
+//            attributes.add(attr40);
+//            attributes.add(attr41);
+//            attributes.add(attr42);
             attributes.add(attr43);
             attributes.add(attr44);
             attributes.add(attr45);
             attributes.add(attr46);
-            attributes.add(attr47);
-            attributes.add(attr48);
-            attributes.add(attr49);
-            attributes.add(attr50);
-            attributes.add(attr51);
-            attributes.add(attr52);
-            attributes.add(attr53);
-            attributes.add(attr54);
-            attributes.add(attr55);
-            attributes.add(attr56);
-            attributes.add(attr57);
+//            attributes.add(attr47);
+//            attributes.add(attr48);
+//            attributes.add(attr49);
+//            attributes.add(attr50);
+//            attributes.add(attr51);
+//            attributes.add(attr52);
+//            attributes.add(attr53);
+//            attributes.add(attr54);
+//            attributes.add(attr55);
+//            attributes.add(attr56);
+//            attributes.add(attr57);
             attributes.add(attr58);
             attributes.add(attr59);
             attributes.add(attr60);
             attributes.add(attr61);
-            attributes.add(attr62);
-            attributes.add(attr63);
-            attributes.add(attr64);
-            attributes.add(attr65);
-            attributes.add(attr66);
-            attributes.add(attr67);
-            attributes.add(attr68);
-            attributes.add(attr69);
-            attributes.add(attr70);
-            attributes.add(attr71);
-            attributes.add(attr72);
+//            attributes.add(attr62);
+//            attributes.add(attr63);
+//            attributes.add(attr64);
+//            attributes.add(attr65);
+//            attributes.add(attr66);
+//            attributes.add(attr67);
+//            attributes.add(attr68);
+//            attributes.add(attr69);
+//            attributes.add(attr70);
+//            attributes.add(attr71);
             attributes.add(attr73);
             attributes.add(attr74);
             attributes.add(attr75);
-            attributes.add(attr76);
+            attributes.add(attr72);
 
+
+            // the clases
+            attributes.add(attr76);
 
 
             // unpredicted data sets (reference to sample structure for new instances)
@@ -685,82 +736,82 @@ public class SensorService extends Service implements SensorEventListener {
 
             DenseInstance newInstance = new DenseInstance(dataUnpredicted.numAttributes()) {
                 {
-                    setValue(attr1, accelX_1.getMean());
-                    setValue(attr2, accelY_1.getMean());
-                    setValue(attr3, accelZ_1.getMean());
-                    setValue(attr4, accelX_1.getPercentile(50));
-                    setValue(attr5, accelY_1.getPercentile(50));
-                    setValue(attr6, accelZ_1.getPercentile(50));
-                    setValue(attr7, accelX_1.getMax());
-                    setValue(attr8, accelY_1.getMax());
-                    setValue(attr9, accelZ_1.getMax());
-                    setValue(attr10, accelX_1.getMin());
-                    setValue(attr11, accelY_1.getMin());
-                    setValue(attr12, accelZ_1.getMin());
-                    setValue(attr13, accelX_1.getVariance());
-                    setValue(attr14, accelY_1.getVariance());
-                    setValue(attr15, accelZ_1.getVariance());
+//                    setValue(attr1, accelX_1.getMean());
+//                    setValue(attr2, accelY_1.getMean());
+//                    setValue(attr3, accelZ_1.getMean());
+//                    setValue(attr4, accelX_1.getPercentile(50));
+//                    setValue(attr5, accelY_1.getPercentile(50));
+//                    setValue(attr6, accelZ_1.getPercentile(50));
+//                    setValue(attr7, accelX_1.getMax());
+//                    setValue(attr8, accelY_1.getMax());
+//                    setValue(attr9, accelZ_1.getMax());
+//                    setValue(attr10, accelX_1.getMin());
+//                    setValue(attr11, accelY_1.getMin());
+//                    setValue(attr12, accelZ_1.getMin());
+//                    setValue(attr13, accelX_1.getVariance());
+//                    setValue(attr14, accelY_1.getVariance());
+//                    setValue(attr15, accelZ_1.getVariance());
 
-                    setValue(attr16, accelX_6.getMean());
-                    setValue(attr17, accelY_6.getMean());
-                    setValue(attr18, accelZ_6.getMean());
-                    setValue(attr19, accelX_6.getPercentile(50));
-                    setValue(attr20, accelY_6.getPercentile(50));
-                    setValue(attr21, accelZ_6.getPercentile(50));
-                    setValue(attr22, accelX_6.getMax());
-                    setValue(attr23, accelY_6.getMax());
-                    setValue(attr24, accelZ_6.getMax());
-                    setValue(attr25, accelX_6.getMin());
-                    setValue(attr26, accelY_6.getMin());
-                    setValue(attr27, accelZ_6.getMin());
+//                    setValue(attr16, accelX_6.getMean());
+//                    setValue(attr17, accelY_6.getMean());
+//                    setValue(attr18, accelZ_6.getMean());
+//                    setValue(attr19, accelX_6.getPercentile(50));
+//                    setValue(attr20, accelY_6.getPercentile(50));
+//                    setValue(attr21, accelZ_6.getPercentile(50));
+//                    setValue(attr22, accelX_6.getMax());
+//                    setValue(attr23, accelY_6.getMax());
+//                    setValue(attr24, accelZ_6.getMax());
+//                    setValue(attr25, accelX_6.getMin());
+//                    setValue(attr26, accelY_6.getMin());
+//                    setValue(attr27, accelZ_6.getMin());
                     setValue(attr28, accelX_6.getVariance());
                     setValue(attr29, accelY_6.getVariance());
                     setValue(attr30, accelZ_6.getVariance());
 
-                    setValue(attr31, accelX_10.getMean());
-                    setValue(attr32, accelY_10.getMean());
-                    setValue(attr33, accelZ_10.getMean());
-                    setValue(attr34, accelX_10.getPercentile(50));
-                    setValue(attr35, accelY_10.getPercentile(50));
-                    setValue(attr36, accelZ_10.getPercentile(50));
-                    setValue(attr37, accelX_10.getMax());
-                    setValue(attr38, accelY_10.getMax());
-                    setValue(attr39, accelZ_10.getMax());
-                    setValue(attr40, accelX_10.getMin());
-                    setValue(attr41, accelY_10.getMin());
-                    setValue(attr42, accelZ_10.getMin());
+                    setValue(attr31, accelX_6.getVariance() + accelY_6.getVariance() + accelZ_6.getVariance());
+//                    setValue(attr32, accelY_10.getMean());
+//                    setValue(attr33, accelZ_10.getMean());
+//                    setValue(attr34, accelX_10.getPercentile(50));
+//                    setValue(attr35, accelY_10.getPercentile(50));
+//                    setValue(attr36, accelZ_10.getPercentile(50));
+//                    setValue(attr37, accelX_10.getMax());
+//                    setValue(attr38, accelY_10.getMax());
+//                    setValue(attr39, accelZ_10.getMax());
+//                    setValue(attr40, accelX_10.getMin());
+//                    setValue(attr41, accelY_10.getMin());
+//                    setValue(attr42, accelZ_10.getMin());
                     setValue(attr43, accelX_10.getVariance());
                     setValue(attr44, accelY_10.getVariance());
                     setValue(attr45, accelZ_10.getVariance());
 
-                    setValue(attr46, accelX_20.getMean());
-                    setValue(attr47, accelY_20.getMean());
-                    setValue(attr48, accelZ_20.getMean());
-                    setValue(attr49, accelX_20.getPercentile(50));
-                    setValue(attr50, accelY_20.getPercentile(50));
-                    setValue(attr51, accelZ_20.getPercentile(50));
-                    setValue(attr52, accelX_20.getMax());
-                    setValue(attr53, accelY_20.getMax());
-                    setValue(attr54, accelZ_20.getMax());
-                    setValue(attr55, accelX_20.getMin());
-                    setValue(attr56, accelY_20.getMin());
-                    setValue(attr57, accelZ_20.getMin());
+                    setValue(attr46, accelX_10.getVariance() + accelY_10.getVariance() + accelZ_10.getVariance());
+//                    setValue(attr47, accelY_20.getMean());
+//                    setValue(attr48, accelZ_20.getMean());
+//                    setValue(attr49, accelX_20.getPercentile(50));
+//                    setValue(attr50, accelY_20.getPercentile(50));
+//                    setValue(attr51, accelZ_20.getPercentile(50));
+//                    setValue(attr52, accelX_20.getMax());
+//                    setValue(attr53, accelY_20.getMax());
+//                    setValue(attr54, accelZ_20.getMax());
+//                    setValue(attr55, accelX_20.getMin());
+//                    setValue(attr56, accelY_20.getMin());
+//                    setValue(attr57, accelZ_20.getMin());
                     setValue(attr58, accelX_20.getVariance());
                     setValue(attr59, accelY_20.getVariance());
                     setValue(attr60, accelZ_20.getVariance());
 
-                    setValue(attr61, accelX_30.getMean());
-                    setValue(attr62, accelY_30.getMean());
-                    setValue(attr63, accelZ_30.getMean());
-                    setValue(attr64, accelX_30.getPercentile(50));
-                    setValue(attr65, accelY_30.getPercentile(50));
-                    setValue(attr66, accelZ_30.getPercentile(50));
-                    setValue(attr67, accelX_30.getMax());
-                    setValue(attr68, accelY_30.getMax());
-                    setValue(attr69, accelZ_30.getMax());
-                    setValue(attr70, accelX_30.getMin());
-                    setValue(attr71, accelY_30.getMin());
-                    setValue(attr72, accelZ_30.getMin());
+                    setValue(attr61, accelX_20.getVariance() + accelY_20.getVariance() + accelZ_20.getVariance());
+//                    setValue(attr62, accelY_30.getMean());
+//                    setValue(attr63, accelZ_30.getMean());
+//                    setValue(attr64, accelX_30.getPercentile(50));
+//                    setValue(attr65, accelY_30.getPercentile(50));
+//                    setValue(attr66, accelZ_30.getPercentile(50));
+//                    setValue(attr67, accelX_30.getMax());
+//                    setValue(attr68, accelY_30.getMax());
+//                    setValue(attr69, accelZ_30.getMax());
+//                    setValue(attr70, accelX_30.getMin());
+//                    setValue(attr71, accelY_30.getMin());
+                    setValue(attr72, accelX_30.getVariance() + accelY_30.getVariance() + accelZ_30.getVariance());
                     setValue(attr73, accelX_30.getVariance());
                     setValue(attr74, accelY_30.getVariance());
                     setValue(attr75, accelZ_30.getVariance());
@@ -774,13 +825,91 @@ public class SensorService extends Service implements SensorEventListener {
             // predict new sample
             try {
                 double result = mClassifier.classifyInstance(newInstance);
-                int phase  = new Double(result).intValue();
+                int phase = new Double(result).intValue();
                 String className = classes.get(phase);
-                String msg =  "predicted: " + className  + " int:" + phase ;
-                Log.d("WEKA_TEST", msg);
+                String msg = "predicted: " + className + " int:" + phase;
+
+
+                String time = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd ", Locale.US).format(new Date(curTimeStamp));
+                predicted_window.add(phase);
+                if (predicted_window.size() >= PREDICTED_WINDOW_SIZE) {
+                    predicted_window.remove(0);
+
+                    if (!MainActivity.fallenAsleep) {
+                        // hasnt fallen asleep yet
+                        int num_light = 0;
+                        int num_deep = 0;
+                        for (int sleep : predicted_window) {
+                            if (sleep == 1) {
+                                num_light++;
+                            } else {
+                                num_deep++;
+                            }
+                        }
+                        if (num_deep > num_light) {
+                            // FALLEN asleep
+                            MainActivity.fallenAsleep = true;
+                            sleep_time = curTimeStamp;
+                            Log.d(SLEEP_TAG, "Fallen asleep at: " + time);
+
+                            FileOutputStream fileOutputStream = new FileOutputStream(sleep_file, true);
+                            OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
+                            writer.append("Time went to sleep: " + time +" \n");
+                            writer.close();
+                            fileOutputStream.close();
+
+
+                        }
+
+
+                    }
+                    if (!MainActivity.wokenUp) {
+                        Calendar cur = Calendar.getInstance();
+                        if (cur.after(alarm)) {
+                            Log.d(SLEEP_TAG, "Forced alarm at " + time);
+                            FileOutputStream fileOutputStream = new FileOutputStream(sleep_file, true);
+                            OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
+                            writer.append("FOrced alarm Will try to wake your ass at: " + time +" \n");
+                            writer.close();
+                            fileOutputStream.close();
+                            MainActivity.wokenUp = true;
+                        }
+                        cur.add(Calendar.MINUTE, 30);
+                        if (alarm.before(cur)) {
+
+                            int num_light = 0;
+                            int num_deep = 0;
+                            for (int sleep : predicted_window) {
+                                if (sleep == 1) {
+                                    num_light++;
+                                } else {
+                                    num_deep++;
+                                }
+                            }
+                            if (num_light > num_deep) {
+                                // Light sleep in alarm rang;
+                                Log.d(SLEEP_TAG, "Wake up alarm at " + time);
+                                FileOutputStream fileOutputStream = new FileOutputStream(sleep_file, true);
+                                OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
+                                writer.append("smart alarm Will try to wake your ass at: " + time +" \n");
+                                writer.close();
+                                fileOutputStream.close();
+
+                                MainActivity.wokenUp = true;
+
+
+                            }
+                        }
+
+                    }
+
+                }
+
+
+                Log.d(SLEEP_TAG, msg);
                 //insert into database in background thread
                 try {
-                    Runnable insertHandler = new InsertHandler(curTimeStamp, curTime , phase, accelerometerMatrix, accelerometerVarianceMatrix, gyroscopeMatrix,
+                    Runnable insertHandler = new InsertHandler(curTimeStamp, curTime, phase, accelerometerMatrix, accelerometerVarianceMatrix, gyroscopeMatrix,
                             gravityMatrix, magneticMatrix, rotationMatrix);
                     executor.execute(insertHandler);
                 } catch (SQLException e) {
@@ -789,22 +918,22 @@ public class SensorService extends Service implements SensorEventListener {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-//            // add data to instance
-////            testing.add(newInstance);
-//
-//            // perform prediction
-//            double myValue = 0;
-//            try {
-//                myValue = mClassifier.classifyInstance(newInstance);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            // get the name of class value
-//            String prediction = testing.classAttribute().value((int) myValue);
-//
-//            System.out.println("The predicted value of the instance was " + prediction);
+        }
+    }
 
-
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "notifications";
+            String description = "Notify";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 }

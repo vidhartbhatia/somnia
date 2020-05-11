@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity
     public static Boolean dataRecordCompleted;
     public static Boolean heightUnitSpinnerTouched;
     public static Boolean subCreated;
+    public static Boolean fallenAsleep;
+    public static Boolean wokenUp;
+
 
     //Set the specific sensors to be used throughout the app
     public final static short TYPE_ACCELEROMETER = Sensor.TYPE_ACCELEROMETER;

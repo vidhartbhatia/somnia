@@ -19,6 +19,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -31,6 +33,8 @@ public class StartFragment extends Fragment implements View.OnClickListener {
     CoordinatorLayout coordinatorLayout;
     DBHelper dbHelper;
     TextView recordProgressMessage;
+    TextView sleepMessage;
+
     static MainActivity mainActivity;
     static ProgressDialog stopDialog;
 
@@ -58,6 +62,8 @@ public class StartFragment extends Fragment implements View.OnClickListener {
 
         //Get form text view element and set
         recordProgressMessage = (TextView) view.findViewById(R.id.start_recording_progress);
+        sleepMessage = (TextView) view.findViewById(R.id.sleep_message);
+
 
         //Set onclick listener for save button
         startButton = (Button) view.findViewById(R.id.startButton);
@@ -123,6 +129,7 @@ public class StartFragment extends Fragment implements View.OnClickListener {
                 //Start the service
                 Intent startService = new Intent(mainActivity, SensorService.class);
                 startService.putExtra("MESSENGER", new Messenger(messageHandler));
+//                startService.putExtra("MESSENGER2", new Messenger(mHandler));
                 getContext().startService(startService);
 
                 Snackbar.make(coordinatorLayout, R.string.start_recording, Snackbar.LENGTH_SHORT).show();
@@ -151,6 +158,23 @@ public class StartFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    public void updateSleepMesage(String msg){
+        sleepMessage.setText(msg);
+    }
+
+
+    public final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            int state = msg.arg1;
+            switch (state) {
+                case 0:
+                    updateSleepMesage("got the message" + msg.arg2);
+
+            }
+
+        }
+    };
     //Message handler for service
     public static Handler messageHandler = new MessageHandler();
 
@@ -176,6 +200,9 @@ public class StartFragment extends Fragment implements View.OnClickListener {
                     stopDialog.show();
                     Log.d(TAG, "Stop dialog displayed");
                     break;
+                case 2:
+
+
             }
         }
     }
