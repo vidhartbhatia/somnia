@@ -53,8 +53,11 @@ import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.Utils;
 
-public class SensorService extends Service implements SensorEventListener {
+import com.mollin.yapi.YeelightDevice;
+import com.mollin.yapi.exception.YeelightResultErrorException;
+import com.mollin.yapi.exception.YeelightSocketException;
 
+public class SensorService extends Service implements SensorEventListener {
     public static final String TAG = "SensorService";
     public static final String SLEEP_TAG = "SLEEP";
     private static final String CHANNEL_ID = "hello";
@@ -286,6 +289,8 @@ public class SensorService extends Service implements SensorEventListener {
 
     @Override
     public void onCreate() {
+        // new yee().execute("");
+
         super.onCreate();
 
         AssetManager assetManager = getAssets();
