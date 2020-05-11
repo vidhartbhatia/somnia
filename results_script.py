@@ -10,7 +10,7 @@ pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
 # csv file name 
-file_name = "meds 5-11/51150"
+file_name = "vids 5-11/51139"
 ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 
