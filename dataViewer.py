@@ -14,10 +14,11 @@ VAR_WINDOW1 = 10*60*10
 SMOOTHING = 20
 
 # csv file name 
-dataFolder = "jeremy 5-7"
-data_file_name = "50704"
+dataFolder = "meds 5-11"
+data_file_name = "51150"
 data_dir = "Data"
-results_dir = "Test_var_agg_randFor"
+labels_dir = "Tagging"
+results_dir = "Test_var_agg"
 ROW_LIMIT = None # set to none if want all
 
 class MyFrame(wx.Frame):
@@ -50,16 +51,18 @@ class MyFrame(wx.Frame):
         accZ = []
         accY = []
         accX = []
-        predictedTags = []
+        appPredictedTags = []
+        postPredictedTags = []
         labeledTags = []
 
         with open(f"{results_dir}{os.sep}{dataFolder}{os.sep}{data_file_name}_results.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             for row in data:
-                # if len(tags) >=10000: break
+                if ROW_LIMIT!=None:
+                    if len(postPredictedTags) >=ROW_LIMIT: break
                 tag = int(row['predicted'])
                 if tag != -1:
-                    predictedTags.extend([tag]*600)
+                    postPredictedTags.extend([tag]*600)
                 
                 tag = int(row['tags'])
                 if tag != -1:
@@ -68,23 +71,26 @@ class MyFrame(wx.Frame):
         with open(f"{data_dir}{os.sep}{dataFolder}{os.sep}{data_file_name}.csv", 'r') as f:
             data = csv.DictReader(f, delimiter=',')
             for row in data:
-                if len(dtime) >= len(predictedTags):
-                    break
-                dtime.append(datetime.datetime.fromtimestamp(int(row['time_stamp'])/1000))
-                accZ.append(float(row['accZ']))
-                accY.append(float(row['accY']))
-                accX.append(float(row['accX']))
-        # time = list(map(lambda x: x, map(lambda t: t-time[0], time)))
-
-        print(f"read {len(dtime)} rows and {len(predictedTags)} tags")
-        assert(len(dtime) == len(predictedTags))
+                if len(dtime) < len(postPredictedTags):
+                    dtime.append(datetime.datetime.fromtimestamp(int(row['time_stamp'])/1000))
+                    accZ.append(float(row['accZ']))
+                    accY.append(float(row['accY']))
+                    accX.append(float(row['accX']))
+                if len(appPredictedTags) < len(postPredictedTags):
+                    tag = int(row['phase'])
+                    if tag>-1:
+                        appPredictedTags.extend([tag]*600)
+                
+        print(f"read {len(dtime)} rows and {len(postPredictedTags)} postPredictedTags and {len(appPredictedTags)} appPredictedTags")
+        assert(len(dtime) == len(postPredictedTags) == len(appPredictedTags))
         # print(list(map(lambda x: x.strftime('%H:%M:%S'),dtime[:100])))
         self.t = np.array(dtime)
         self.accZ = np.array(accZ)
         self.accY = np.array(accY)
         self.accX = np.array(accX)
-        self.pred_tags = np.array(predictedTags)
+        self.pred_tags = np.array(postPredictedTags)
         self.label_tags = np.array(labeledTags)
+        self.app_tags = np.array(appPredictedTags)
 
         self.varZ = np.zeros(len(accZ))
         self.varY = np.zeros(len(accY))
@@ -140,14 +146,18 @@ class MyFrame(wx.Frame):
                   self.topPlot.plot(self.t[self.i_start:self.i_end],
                                  self.varX[self.i_start:self.i_end], 'b', linewidth=3, label='X')[0]
 
+        self.plot_app_tags = \
+            self.bottPlot.plot(self.t[self.i_start:self.i_end],
+                               self.app_tags[self.i_start:self.i_end], 'k', label='app-predicted', linewidth=5)[0]
         self.plot_pred_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.pred_tags[self.i_start:self.i_end], 'b', label='predicted', linewidth=4)[0]
+                               self.pred_tags[self.i_start:self.i_end], 'b', label='post-predicted', linewidth=3)[0]
+
         self.plot_label_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.label_tags[self.i_start:self.i_end], 'r', label='labeled', linewidth=2)[0]
-        self.bottPlot.legend([self.plot_pred_tags, self.plot_label_tags])
-
+                               self.label_tags[self.i_start:self.i_end], 'r', label='labeled', linewidth=1)[0]
+        
+        self.bottPlot.legend([self.plot_app_tags, self.plot_pred_tags, self.plot_label_tags])
         self.topPlot.legend([self.plot_accVar, self.plot_accVarZ, self.plot_accVarY, self.plot_accVarX])
         self.topPlot.fill_between(self.t, self.varAcc, color='black', alpha=0.5)
         # self.topPlot.fill_between(self.t, self.varZ, color='green')
@@ -169,6 +179,7 @@ class MyFrame(wx.Frame):
         self.plot_accVarY.set_xdata(self.t[self.i_start:self.i_end])
         self.plot_accVarX.set_xdata(self.t[self.i_start:self.i_end])
         self.plot_pred_tags.set_xdata(self.t[self.i_start:self.i_end])
+        self.plot_app_tags.set_xdata(self.t[self.i_start:self.i_end])
         self.plot_label_tags.set_xdata(self.t[self.i_start:self.i_end])
 
         # self.plot_rawAccZ.set_ydata(self.accZ[self.i_start:self.i_end])
@@ -178,6 +189,7 @@ class MyFrame(wx.Frame):
         self.plot_accVarY.set_ydata(self.varY[self.i_start:self.i_end])
         self.plot_accVarX.set_ydata(self.varX[self.i_start:self.i_end])
         self.plot_pred_tags.set_ydata(self.pred_tags[self.i_start:self.i_end])
+        self.plot_app_tags.set_ydata(self.app_tags[self.i_start:self.i_end])
         self.plot_label_tags.set_ydata(self.label_tags[self.i_start:self.i_end])
 
         # Adjust plot limits:
