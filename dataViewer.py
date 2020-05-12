@@ -148,7 +148,7 @@ class MyFrame(wx.Frame):
 
         self.plot_app_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.app_tags[self.i_start:self.i_end], 'k', label='app-predicted', linewidth=5)[0]
+                               self.app_tags[self.i_start:self.i_end], 'g', label='app-predicted', linewidth=5)[0]
         self.plot_pred_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
                                self.pred_tags[self.i_start:self.i_end], 'b', label='post-predicted', linewidth=3)[0]
