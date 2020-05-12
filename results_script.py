@@ -9,8 +9,8 @@ import numpy as np
 pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
-# csv file name 
-file_name = "vids 5-11/51139"
+folder_name = "Test_var_agg"
+file_name = "jeremy 5-11/51110"
 ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 
@@ -19,7 +19,7 @@ rows = []
 
 T = time.time()
 # reading csv file 
-with open(f"Test_var_agg{os.sep}{file_name}_results.csv", 'r') as csvfile: 
+with open(f"{folder_name}{os.sep}{file_name}_results.csv", 'r') as csvfile: 
     # creating a csv reader object 
     csvreader = csv.DictReader(csvfile)
       
@@ -41,7 +41,7 @@ for i in range(len(rows)):
 
 rows = zip(predicted)
 
-outFile = f"Test_var_agg{os.sep}{file_name}_results.csv"
+outFile = f"{folder_name}{os.sep}{file_name}_results.csv"
 os.makedirs(os.path.dirname(outFile), exist_ok=True)
 with open(outFile, "w", newline ='') as f:
     writer = csv.writer(f)
