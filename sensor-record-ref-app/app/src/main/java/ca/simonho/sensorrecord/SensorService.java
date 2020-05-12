@@ -290,7 +290,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         AssetManager assetManager = getAssets();
         try {
-            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_final_sunday_model.model"));
+            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("somnia_final_monday_model.model"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -301,7 +301,6 @@ public class SensorService extends Service implements SensorEventListener {
         Log.d(SLEEP_TAG, "loaded model: ");
         MainActivity.fallenAsleep = false;
         MainActivity.wokenUp = false;
-
 
         dbHelper = DBHelper.getInstance(getApplicationContext());
         accelX_1 = new DescriptiveStatistics();
@@ -691,7 +690,7 @@ public class SensorService extends Service implements SensorEventListener {
                             MainActivity.fallenAsleep = true;
                             sleep_time = curTimeStamp;
                             Log.d(SLEEP_TAG, "Fallen asleep at: " + time);
-                            new yee().execute("");
+//                            new yee().execute("");
 
                             FileOutputStream fileOutputStream = new FileOutputStream(sleep_file, true);
                             OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream);
