@@ -10,8 +10,8 @@ pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
 # csv file name 
-dataFolder = "meds 5-11"
-data_file_name = "51150"
+dataFolder = "meds 5-12"
+data_file_name = "51234"
 ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 

@@ -10,7 +10,7 @@ pp = pprint.PrettyPrinter()
 pprint = pp.pprint
   
 folder_name = "Test_var_agg"
-file_name = "jeremy 5-11/51110"
+file_name = "meds 5-12/51234"
 ROW_LIMIT = None # set to none if want all
   
 # initializing the titles and rows list 
