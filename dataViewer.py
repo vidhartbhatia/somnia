@@ -168,24 +168,24 @@ class MyFrame(wx.Frame):
                               self.varAcc[self.i_start:self.i_end], 'k', alpha=0.5, linewidth=5, label='sum')[0]
         self.plot_accVarZ = \
                   self.topPlot.plot(self.t[self.i_start:self.i_end],
-                                 self.varZ[self.i_start:self.i_end], 'g', linewidth=4, label='Z')[0]
+                                 self.varZ[self.i_start:self.i_end], 'g', alpha=0.8, linewidth=4, label='Z')[0]
 
         self.plot_accVarY = \
                   self.topPlot.plot(self.t[self.i_start:self.i_end],
-                                 self.varY[self.i_start:self.i_end], 'r', linewidth=4, label='Y')[0]
+                                 self.varY[self.i_start:self.i_end], 'r', alpha=0.8, linewidth=4, label='Y')[0]
         self.plot_accVarX = \
                   self.topPlot.plot(self.t[self.i_start:self.i_end],
-                                 self.varX[self.i_start:self.i_end], 'b', linewidth=4, label='X')[0]
+                                 self.varX[self.i_start:self.i_end], 'b', alpha=0.8, linewidth=4, label='X')[0]
 
         self.plot_app_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
                                self.app_tags[self.i_start:self.i_end], 'k', alpha=0.8, label='app-live-predicted', linewidth=5)[0]
         self.plot_saa_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.saa_tags[self.i_start:self.i_end], 'r', alpha=1, label='sleep-as-android-labeled', linewidth=2)[0]
+                               self.saa_tags[self.i_start:self.i_end], 'r', alpha=0.9, label='sleep-as-android-labeled', linewidth=2)[0]
         self.plot_weka_tags = \
             self.bottPlot.plot(self.t[self.i_start:self.i_end],
-                               self.weka_tags[self.i_start:self.i_end], 'g', alpha=1, label='post-weka-predicted', linewidth=3)[0]
+                               self.weka_tags[self.i_start:self.i_end], 'g', alpha=0.9, label='post-weka-predicted', linewidth=3)[0]
         
         self.bottPlot.legend([self.plot_app_tags, self.plot_saa_tags, self.plot_weka_tags])
         self.topPlot.legend([self.plot_accVar, self.plot_accVarZ, self.plot_accVarY, self.plot_accVarX])
